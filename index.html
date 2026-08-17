@@ -55,8 +55,14 @@
         .badge-fail { background-color: var(--danger); }
         .badge-blocked { background-color: #333; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
-        .modal-content { background: white; border-radius: 12px; padding: 30px 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border-top: 8px solid var(--danger); }
+        /* MODALES Y DIÁLOGOS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
+        .modal-content { background: white; border-radius: 12px; padding: 30px 20px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal-content.danger-top { border-top: 8px solid var(--danger); }
+        .modal-content.primary-top { border-top: 8px solid var(--primary); }
+        
+        .dialog-actions { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
+        
         .status-container { text-align: center; padding: 40px 20px; border-radius: 12px; }
         #loading-screen { text-align: center; padding: 40px; }
         
@@ -70,13 +76,24 @@
 </head>
 <body>
 
+<div id="custom-dialog" class="modal-overlay hidden">
+    <div id="dialog-box" class="modal-content primary-top">
+        <h2 id="dialog-title" style="margin-top: 0; color: var(--text-main);">Atención</h2>
+        <p id="dialog-message" style="font-size: 1.1rem;"></p>
+        <div class="dialog-actions">
+            <button id="dialog-cancel-btn" class="btn-secondary hidden">Cancelar</button>
+            <button id="dialog-ok-btn">Aceptar</button>
+        </div>
+    </div>
+</div>
+
 <div id="warning-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <svg class="icon" style="width: 64px; height: 64px; fill: var(--danger);" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-        <h2>ADVERTENCIA DE SEGURIDAD</h2>
-        <p>Se detectó pérdida de enfoque del examen.</p>
-        <p>Infracción: <strong id="modal-count" style="color: var(--danger); font-size: 1.5rem;"></strong> de <strong>5</strong></p>
-        <button onclick="window.closeModal()">Entendido</button>
+    <div class="modal-content danger-top">
+        <svg class="icon" style="width: 64px; height: 64px; fill: var(--danger); margin: 0 auto;" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        <h2 style="color: var(--danger);">ADVERTENCIA DE SEGURIDAD</h2>
+        <p style="font-size: 1.1rem; color: var(--text-main);">Se detectó pérdida de enfoque del examen.</p>
+        <p style="font-size: 1.2rem; margin: 20px 0;">Infracción: <strong id="modal-count" style="color: var(--danger); font-size: 1.5rem;"></strong> de <strong>5</strong></p>
+        <button onclick="window.closeModal()" style="background-color: var(--danger);">Entendido</button>
     </div>
 </div>
 
@@ -165,7 +182,7 @@
 </div>
 
 <footer class="app-footer">
-    <p>Desarrollado con fines de innovación y crecimiento profesional.</p>
+    <p>Desarrollado por Enkodo by EAM versión prototipo</p>
     <p class="quote">"If you want different results, do not do the same things." - Albert Einstein</p>
 </footer>
 
@@ -186,10 +203,40 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // --- SISTEMA DE DIÁLOGOS PERSONALIZADOS ---
+    window.CustomDialog = {
+        show: function(title, message, isConfirm = false) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-dialog');
+                const box = document.getElementById('dialog-box');
+                document.getElementById('dialog-title').innerText = title;
+                document.getElementById('dialog-message').innerText = message;
+                
+                const btnOk = document.getElementById('dialog-ok-btn');
+                const btnCancel = document.getElementById('dialog-cancel-btn');
+                
+                if (isConfirm) {
+                    btnCancel.classList.remove('hidden');
+                    box.classList.remove('primary-top');
+                    box.classList.add('danger-top');
+                } else {
+                    btnCancel.classList.add('hidden');
+                    box.classList.add('primary-top');
+                    box.classList.remove('danger-top');
+                }
+                
+                modal.classList.remove('hidden');
+                
+                btnOk.onclick = () => { modal.classList.add('hidden'); resolve(true); };
+                btnCancel.onclick = () => { modal.classList.add('hidden'); resolve(false); };
+            });
+        },
+        alert: function(message, title="Atención") { return this.show(title, message, false); },
+        confirm: function(message, title="Confirmación") { return this.show(title, message, true); }
+    };
+
     let questions = [], examConfig = {};
     let sessionData = { browserId: "", studentName: "", studentEmail: "", startTime: null };
-    
-    // Candados de seguridad
     let isExamActive = false, isBlocked = false, isHandlingInfraction = false;
     let cheatCount = 0;
     const MAX_INFRACTIONS = 5;
@@ -226,8 +273,12 @@
     window.showUploadPanel = () => { document.getElementById('instructor-upload').classList.remove('hidden'); document.getElementById('instructor-grades').classList.add('hidden'); };
     window.showGradingPanel = () => { document.getElementById('instructor-upload').classList.add('hidden'); document.getElementById('instructor-grades').classList.remove('hidden'); window.loadGrades(); };
 
-    document.getElementById('upload-trigger').addEventListener('click', (e) => {
-        if(!document.getElementById('exam-name').value.trim()) { e.preventDefault(); alert("Faltan datos"); }
+    document.getElementById('upload-trigger').addEventListener('click', async (e) => {
+        const file = document.getElementById('json-file').files[0];
+        if(!document.getElementById('exam-name').value.trim() || !document.getElementById('exam-gen').value.trim()) { 
+            e.preventDefault(); 
+            await window.CustomDialog.alert("Faltan datos en la configuración del examen."); 
+        }
     });
 
     document.getElementById('json-file').addEventListener('change', function(event) {
@@ -251,7 +302,10 @@
                 await setDoc(doc(db, "exams", "active_exam"), dbStruct);
                 await setDoc(doc(db, "exam_keys", "active_exam"), masterKey);
                 document.getElementById('status-text').innerText = `¡Éxito! Examen subido y asegurado en Firestore.`;
-            } catch (err) { alert("Error al subir."); }
+                await window.CustomDialog.alert("El examen se ha subido correctamente.", "Éxito");
+            } catch (err) { 
+                await window.CustomDialog.alert("Error al subir o procesar el archivo JSON.", "Error");
+            }
         };
         reader.readAsText(file);
     });
@@ -271,7 +325,7 @@
 
             subQuery.forEach((d) => {
                 const sub = d.data();
-                const docId = d.id; // ID Único del intento en Firestore
+                const docId = d.id; 
                 const totalQs = correctAnswers.length;
                 
                 let btnAccion = `<button class="btn-warning" onclick="window.resetAttempt('${docId}')">Reiniciar Intento</button>`;
@@ -305,13 +359,15 @@
         } catch (e) { tbody.innerHTML = "<tr><td colspan='6'>Error al cargar.</td></tr>"; }
     };
 
-    // ELIMINAR/RESETEAR INTENTO
     window.resetAttempt = async (docId) => {
-        if(confirm("¿Estás seguro de eliminar este intento? Esto permitirá al alumno presentar el examen nuevamente.")) {
+        const isConfirmed = await window.CustomDialog.confirm("¿Estás seguro de eliminar este intento? Esto permitirá al alumno presentar el examen nuevamente.");
+        if(isConfirmed) {
             try {
                 await deleteDoc(doc(db, "submissions", docId));
-                window.loadGrades(); // Recargar tabla
-            } catch(e) { alert("Error al eliminar el intento."); }
+                window.loadGrades(); 
+            } catch(e) { 
+                await window.CustomDialog.alert("Error al eliminar el intento.", "Error");
+            }
         }
     };
 
@@ -320,12 +376,14 @@
         const nameInput = document.getElementById('student-name').value.trim();
         const emailInput = document.getElementById('student-email').value.trim().toLowerCase();
         
-        if(nameInput.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { alert("Datos inválidos."); return; }
+        if(nameInput.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { 
+            await window.CustomDialog.alert("Por favor ingresa un nombre y un correo electrónico válidos."); 
+            return; 
+        }
 
         document.getElementById('exam-intro').classList.add('hidden');
         document.getElementById('loading-screen').classList.remove('hidden');
 
-        // VERIFICACIÓN DE INTENTO ÚNICO
         try {
             const q = query(collection(db, "submissions"), where("student.email", "==", emailInput));
             const snapshot = await getDocs(q);
@@ -354,13 +412,12 @@
                 return;
             }
         } catch(e) {
-            alert("Error al verificar identidad. Revisa tu conexión.");
+            await window.CustomDialog.alert("Error al verificar identidad. Revisa tu conexión.", "Error");
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('exam-intro').classList.remove('hidden');
             return;
         }
 
-        // Si pasa la validación, inicia el examen
         sessionData.studentName = nameInput; sessionData.studentEmail = emailInput;
         sessionData.startTime = new Date().getTime();
         
@@ -405,11 +462,12 @@
                 } else { qBlock.classList.remove('question-error'); }
             }
             if (!allAnswered) {
-                alert(`Debes responder todas las preguntas. Falta la número ${firstUnanswered + 1}.`);
+                await window.CustomDialog.alert(`Debes responder todas las preguntas. Falta la número ${firstUnanswered + 1}.`);
                 document.getElementById(`qblock_${firstUnanswered}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
-            if (!confirm("¿Seguro que deseas Finalizar el Examen?")) return;
+            const isConfirmed = await window.CustomDialog.confirm("¿Seguro que deseas finalizar el examen? Ya no podrás cambiar tus respuestas.");
+            if (!isConfirmed) return;
         }
         
         isExamActive = false; clearInterval(timerInterval);
@@ -438,11 +496,11 @@
 
     window.closeModal = function() { document.getElementById('warning-modal').classList.add('hidden'); }
     
-    // --- LÓGICA ANTI-CHEAT CON CANDADO LÓGICO ---
+    // --- LÓGICA ANTI-CHEAT ---
     function checkInfraction() {
         if (!isExamActive || isBlocked || isHandlingInfraction) return;
         
-        isHandlingInfraction = true; // Bloquea múltiples eventos simultáneos
+        isHandlingInfraction = true; 
         cheatCount++;
         
         if (cheatCount >= MAX_INFRACTIONS) {
@@ -451,8 +509,6 @@
             document.getElementById('modal-count').innerText = cheatCount;
             document.getElementById('warning-modal').classList.remove('hidden');
         }
-        
-        // Libera el candado después de 3 segundos
         setTimeout(() => { isHandlingInfraction = false; }, 3000);
     }
 
