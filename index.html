@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Evaluación Prehospitalaria TUMB</title>
+    <style>
+        :root {
+            --primary: #0288D1; --primary-light: #5EB8FF; --primary-dark: #005B9F;
+            --bg-color: #F0F4F8; --surface: #FFFFFF; --text-main: #2C3E50;
+            --text-secondary: #7F8C8D; --danger: #B73A3A; --danger-light: #F9EBEB;
+            --success: #388E3C; --warning: #F57C00;
+        }
+        body { font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 900px; }
+        .card { background: var(--surface); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 2rem; margin-bottom: 1.5rem; position: relative; }
+        h1 { font-size: 1.8rem; color: var(--primary-dark); margin-top: 0; }
+        h2 { font-size: 1.5rem; color: var(--primary-dark); }
+        h3 { font-size: 1.1rem; line-height: 1.5; margin-bottom: 15px; }
+        p { line-height: 1.6; }
+        
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
+        input[type="text"], input[type="email"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #BDC3C7; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 1rem; transition: border-color 0.3s; }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(2, 136, 209, 0.2); }
+        
+        button, .btn-upload { background-color: var(--primary); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; text-transform: uppercase; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; box-sizing: border-box; }
+        button:hover, .btn-upload:hover { background-color: var(--primary-dark); }
+        .btn-secondary { background-color: var(--text-secondary); }
+        .btn-secondary:hover { background-color: #34495E; }
+        
+        .hidden { display: none !important; }
+        
+        .sticky-header { position: sticky; top: 0; background: var(--surface); padding: 15px; z-index: 100; border-bottom: 3px solid var(--primary); display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .timer-display { font-size: 1.4rem; font-weight: bold; color: var(--primary-dark); font-family: monospace; }
+        .timer-danger { color: var(--danger); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        
+        .question-block { margin-bottom: 2rem; padding: 1.2rem; border-radius: 8px; background-color: #FAFAFA; border-left: 4px solid var(--primary); transition: background-color 0.3s; }
+        .question-error { background-color: var(--danger-light); border-left: 4px solid var(--danger); }
+        .option-label { display: flex; align-items: center; margin: 10px 0; padding: 14px; border: 1px solid #E0E0E0; border-radius: 8px; cursor: pointer; background: var(--surface); transition: background 0.2s, border-color 0.2s; }
+        .option-label:active { background: #E1F5FE; }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.3); accent-color: var(--primary); }
+        
+        svg.icon { width: 24px; height: 24px; fill: currentColor; }
+        
+        /* TABLA DE CALIFICACIONES */
+        .results-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.95rem; }
+        .results-table th, .results-table td { border: 1px solid #E0E0E0; padding: 12px; text-align: left; }
+        .results-table th { background-color: var(--primary); color: white; }
+        .results-table tr:nth-child(even) { background-color: #F9F9F9; }
+        .badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; color: white;}
+        .badge-pass { background-color: var(--success); }
+        .badge-fail { background-color: var(--danger); }
+        .badge-blocked { background-color: #333; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
+        .modal-content { background: white; border-radius: 12px; padding: 30px 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border-top: 8px solid var(--danger); }
+        
+        .status-container { text-align: center; padding: 40px 20px; border-radius: 12px; }
+        #loading-screen { text-align: center; padding: 40px; }
+        @media (min-width: 600px) { button, .btn-upload { width: auto; padding: 12px 24px; } #submit-btn, #start-btn { width: 100%; } }
+    </style>
+</head>
+<body>
+
+<div id="warning-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <svg class="icon" style="width: 64px; height: 64px; fill: var(--danger);" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        <h2>ADVERTENCIA DE SEGURIDAD</h2>
+        <p>Se detectó pérdida de enfoque del examen.</p>
+        <p>Infracción: <strong id="modal-count" style="color: var(--danger); font-size: 1.5rem;"></strong> de <strong>5</strong></p>
+        <button onclick="window.closeModal()">Entendido</button>
+    </div>
+</div>
+
+<div class="container">
+
+    <div id="loading-screen" class="card">
+        <h2>Conectando con el Servidor...</h2>
+    </div>
+
+    <!-- VISTA INSTRUCTOR -->
+    <div id="instructor-view" class="card hidden">
+        <h2>Panel de Administración</h2>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button onclick="window.showUploadPanel()">Configurar Examen</button>
+            <button class="btn-secondary" onclick="window.showGradingPanel()">Ver Calificaciones</button>
+        </div>
+
+        <!-- SECCIÓN DE CARGA -->
+        <div id="instructor-upload" class="instructor-form">
+            <div class="form-group"><label>Nombre de la Evaluación</label><input type="text" id="exam-name"></div>
+            <div class="form-group"><label>Generación / Grupo</label><input type="text" id="exam-gen"></div>
+            <div class="form-group"><label>Calificación Mínima Aprobatoria (%)</label><input type="number" id="exam-min-score" value="80"></div>
+            <div class="form-group"><label>Tiempo (Minutos)</label><input type="number" id="exam-duration" value="60"></div>
+            <input type="file" id="json-file" accept=".json" class="hidden">
+            <label for="json-file" class="btn-upload" id="upload-trigger">Cargar JSON a Firebase</label>
+            <p id="status-text" style="color: var(--success); font-weight: bold; margin-top: 20px;"></p>
+        </div>
+
+        <!-- SECCIÓN DE CALIFICACIONES -->
+        <div id="instructor-grades" class="hidden">
+            <h3>Resultados de la Evaluación Activa</h3>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">El sistema comparará las entregas con la Llave Maestra oculta.</p>
+            <button onclick="window.loadGrades()" style="margin-bottom: 15px; width: auto;">Actualizar Tabla</button>
+            <div style="overflow-x: auto;">
+                <table class="results-table" id="grades-table">
+                    <thead>
+                        <tr>
+                            <th>Alumno</th>
+                            <th>Tiempo</th>
+                            <th>Infracciones</th>
+                            <th>Aciertos</th>
+                            <th>Calificación</th>
+                            <th>Estatus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="grades-body">
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISTA ALUMNO -->
+    <div id="student-view" class="card hidden">
+        <h1 id="display-exam-name">Evaluación de Certificación</h1>
+        <h3 id="display-exam-gen" style="color: var(--text-secondary); margin-top: -10px;"></h3>
+        
+        <div id="exam-intro">
+            <div class="form-group" style="background: #FAFAFA; padding: 20px; border-radius: 8px;">
+                <label>Nombre Completo</label><input type="text" id="student-name">
+                <br><br><label>Correo Electrónico</label><input type="email" id="student-email">
+            </div>
+            <button onclick="window.startExam()" id="start-btn">Comenzar Examen</button>
+        </div>
+
+        <div id="exam-wrapper" class="hidden">
+            <div class="sticky-header">
+                <div>Evaluación en curso</div><div class="timer-display" id="timer-text">00:00:00</div>
+            </div>
+            <div id="exam-container"></div>
+            <button id="submit-btn" onclick="window.submitExam(false)" style="background-color: var(--success); margin-top: 25px;">Finalizar y Enviar a la Nube</button>
+        </div>
+    </div>
+
+    <!-- PANTALLAS DE ESTADO -->
+    <div id="blocked-view" class="card status-container hidden" style="border: 2px solid var(--danger); background-color: var(--danger-light);">
+        <h1 style="color: var(--danger);">EXAMEN BLOQUEADO</h1>
+        <p>Has superado el límite de 5 infracciones.</p>
+    </div>
+
+    <div id="success-view" class="card status-container hidden" style="border: 2px solid var(--success); background-color: #E8F5E9;">
+        <h1 style="color: var(--success);">EXAMEN ENVIADO</h1>
+        <p id="success-message">Tus respuestas se han guardado. Tu instructor publicará los resultados.</p>
+    </div>
+
+</div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDf5LjSwUoFN8g6VBpoRR3v15VUWPCF5M4",
+        authDomain: "simuladores-99c1e.firebaseapp.com",
+        projectId: "simuladores-99c1e",
+        storageBucket: "simuladores-99c1e.firebasestorage.app",
+        messagingSenderId: "1048172617482",
+        appId: "1:1048172617482:web:10a77eea8e21e0900e64f3",
+        measurementId: "G-K5KQ7Z80WP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // VARIABLES ESTUDIANTE
+    let questions = [];
+    let examConfig = {};
+    let sessionData = { browserId: "", studentName: "", studentEmail: "", startTime: null };
+    let isExamActive = false, isBlocked = false, cheatCount = 0, lastInfractionTime = 0;
+    const MAX_INFRACTIONS = 5;
+    let timerInterval, timeRemainingSeconds = 0;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdmin = urlParams.get('admin') === 'true';
+
+    window.onload = async () => {
+        if(isAdmin) {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('instructor-view').classList.remove('hidden');
+        } else {
+            try {
+                const docRef = doc(db, "exams", "active_exam");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    examConfig = data.config; questions = data.questions;
+                    document.getElementById('display-exam-name').innerText = examConfig.name;
+                    document.getElementById('display-exam-gen').innerText = "Generación: " + examConfig.gen;
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    document.getElementById('student-view').classList.remove('hidden');
+                } else {
+                    document.getElementById('loading-screen').innerHTML = `<h2>Sin Evaluación Activa</h2>`;
+                }
+            } catch (error) {
+                document.getElementById('loading-screen').innerHTML = `<h2>Error de Conexión</h2>`;
+            }
+        }
+    };
+
+    // --- LÓGICA DEL INSTRUCTOR ---
+    window.showUploadPanel = () => { document.getElementById('instructor-upload').classList.remove('hidden'); document.getElementById('instructor-grades').classList.add('hidden'); };
+    window.showGradingPanel = () => { document.getElementById('instructor-upload').classList.add('hidden'); document.getElementById('instructor-grades').classList.remove('hidden'); window.loadGrades(); };
+
+    document.getElementById('upload-trigger').addEventListener('click', (e) => {
+        if(!document.getElementById('exam-name').value.trim()) { e.preventDefault(); alert("Faltan datos"); }
+    });
+
+    document.getElementById('json-file').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const rawData = JSON.parse(e.target.result);
+                
+                // 1. Datos para el alumno (Sin respuestas)
+                const studentSafeData = rawData.map(q => ({ q: q.q, opts: q.opts }));
+                const dbStruct = {
+                    config: {
+                        name: document.getElementById('exam-name').value.trim(),
+                        gen: document.getElementById('exam-gen').value.trim(),
+                        minScore: parseInt(document.getElementById('exam-min-score').value.trim()),
+                        duration: parseInt(document.getElementById('exam-duration').value.trim()),
+                        totalQuestions: studentSafeData.length
+                    },
+                    questions: studentSafeData,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // 2. Llave Maestra (Solo respuestas correctas)
+                const masterKey = {
+                    examName: dbStruct.config.name,
+                    answers: rawData.map(q => q.ans)
+                };
+
+                document.getElementById('status-text').innerText = "Subiendo Examen y Llave Maestra...";
+                
+                // Guardar ambas colecciones
+                await setDoc(doc(db, "exams", "active_exam"), dbStruct);
+                await setDoc(doc(db, "exam_keys", "active_exam"), masterKey);
+                
+                document.getElementById('status-text').innerText = `¡Éxito! Examen subido y asegurado en Firestore.`;
+            } catch (err) { alert("Error al subir."); }
+        };
+        reader.readAsText(file);
+    });
+
+    // PANEL DE CALIFICACIÓN AUTOMÁTICA
+    window.loadGrades = async () => {
+        const tbody = document.getElementById('grades-body');
+        tbody.innerHTML = "<tr><td colspan='6'>Calculando calificaciones...</td></tr>";
+        
+        try {
+            // 1. Obtener la llave maestra
+            const keySnap = await getDoc(doc(db, "exam_keys", "active_exam"));
+            if (!keySnap.exists()) { tbody.innerHTML = "<tr><td colspan='6'>No hay llave maestra.</td></tr>"; return; }
+            const correctAnswers = keySnap.data().answers;
+
+            // 2. Obtener todas las entregas
+            const subQuery = await getDocs(collection(db, "submissions"));
+            
+            tbody.innerHTML = "";
+            if (subQuery.empty) { tbody.innerHTML = "<tr><td colspan='6'>Nadie ha entregado aún.</td></tr>"; return; }
+
+            subQuery.forEach((doc) => {
+                const sub = doc.data();
+                const totalQs = correctAnswers.length;
+                let score = 0;
+                
+                // Si fue bloqueado, reprobación directa
+                if(sub.status === "BLOCKED") {
+                    tbody.innerHTML += `<tr>
+                        <td>${sub.student.name}<br><small>${sub.student.email}</small></td>
+                        <td>N/A</td><td style="color:red; font-weight:bold;">${sub.metrics.infractions}</td>
+                        <td>0 / ${totalQs}</td><td>0%</td>
+                        <td><span class="badge badge-blocked">ANULADO</span></td>
+                    </tr>`;
+                    return;
+                }
+
+                // CALIFICAR
+                sub.answers.forEach(a => {
+                    if(a.selectedOption === correctAnswers[a.questionIndex]) { score++; }
+                });
+
+                let percentage = (score / totalQs) * 100;
+                let passed = percentage >= sub.examInfo.passingThreshold;
+                let badgeClass = passed ? 'badge-pass' : 'badge-fail';
+                let badgeText = passed ? 'APROBADO' : 'REPROBADO';
+                let mins = Math.floor(sub.metrics.timeUsedSeconds / 60);
+
+                tbody.innerHTML += `<tr>
+                    <td>${sub.student.name}<br><small>${sub.student.email}</small></td>
+                    <td>${mins} min</td>
+                    <td style="${sub.metrics.infractions > 0 ? 'color:red; font-weight:bold;' : ''}">${sub.metrics.infractions}</td>
+                    <td>${score} / ${totalQs}</td>
+                    <td style="font-weight:bold;">${percentage.toFixed(1)}%</td>
+                    <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                </tr>`;
+            });
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = "<tr><td colspan='6'>Error al calcular calificaciones.</td></tr>";
+        }
+    };
+
+    // --- LÓGICA DEL ALUMNO ---
+    window.startExam = function() {
+        const nameInput = document.getElementById('student-name').value.trim();
+        const emailInput = document.getElementById('student-email').value.trim();
+        if(nameInput.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { alert("Datos inválidos."); return; }
+
+        sessionData.studentName = nameInput; sessionData.studentEmail = emailInput;
+        sessionData.browserId = 'BID-' + Date.now();
+        sessionData.startTime = new Date().getTime();
+
+        document.getElementById('exam-intro').classList.add('hidden');
+        document.getElementById('exam-wrapper').classList.remove('hidden');
+        isExamActive = true; isBlocked = false; cheatCount = 0;
+        
+        try { document.documentElement.requestFullscreen(); } catch(e) {}
+        renderQuestions(); startTimer(examConfig.duration || 60);
+    };
+
+    function startTimer(minutes) {
+        timeRemainingSeconds = minutes * 60;
+        timerInterval = setInterval(() => {
+            timeRemainingSeconds--;
+            let h = Math.floor(timeRemainingSeconds / 3600), m = Math.floor((timeRemainingSeconds % 3600) / 60), s = timeRemainingSeconds % 60;
+            document.getElementById('timer-text').innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            if (timeRemainingSeconds <= 0) { clearInterval(timerInterval); window.submitExam(true); }
+        }, 1000);
+    }
+
+    function renderQuestions() {
+        const container = document.getElementById('exam-container');
+        questions.forEach((item, index) => {
+            const qBlock = document.createElement('div'); qBlock.className = 'question-block'; qBlock.id = `qblock_${index}`;
+            qBlock.innerHTML = `<h3>${index + 1}. ${item.q}</h3>`;
+            item.opts.forEach((optText, optIndex) => {
+                qBlock.innerHTML += `<label class='option-label'><input type='radio' name='question_${index}' value='${optIndex}'>${optText}</label>`;
+            });
+            container.appendChild(qBlock);
+        });
+    }
+
+    window.submitExam = async function(isAutoSubmit = false) {
+        if (!isAutoSubmit && !confirm("¿Enviar examen?")) return;
+        isExamActive = false; clearInterval(timerInterval);
+        
+        let payload = {
+            student: { name: sessionData.studentName, email: sessionData.studentEmail },
+            examInfo: { name: examConfig.name, passingThreshold: examConfig.minScore },
+            metrics: { infractions: cheatCount, timeUsedSeconds: Math.floor((new Date().getTime() - sessionData.startTime) / 1000) },
+            status: "COMPLETED", answers: []
+        };
+        questions.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="question_${index}"]:checked`);
+            payload.answers.push({ questionIndex: index, selectedOption: selected ? parseInt(selected.value) : null });
+        });
+
+        document.getElementById('student-view').classList.add('hidden');
+        document.getElementById('loading-screen').classList.remove('hidden');
+        await addDoc(collection(db, "submissions"), payload);
+        document.getElementById('loading-screen').classList.add('hidden');
+        document.getElementById('success-view').classList.remove('hidden');
+    };
+
+    window.closeModal = function() { document.getElementById('warning-modal').classList.add('hidden'); }
+    
+    // ANTI-CHEAT
+    document.addEventListener("visibilitychange", () => { if(document.hidden && isExamActive && !isBlocked) { cheatCount++; document.getElementById('modal-count').innerText=cheatCount; document.getElementById('warning-modal').classList.remove('hidden'); if(cheatCount>=5) triggerBlock(); }});
+    window.addEventListener("blur", () => { if(isExamActive && !isBlocked) { cheatCount++; document.getElementById('modal-count').innerText=cheatCount; document.getElementById('warning-modal').classList.remove('hidden'); if(cheatCount>=5) triggerBlock(); }});
+
+    async function triggerBlock() {
+        isBlocked = true; isExamActive = false; clearInterval(timerInterval);
+        await addDoc(collection(db, "submissions"), { student: { name: sessionData.studentName, email: sessionData.studentEmail }, status: "BLOCKED", metrics: { infractions: cheatCount } });
+        document.getElementById('warning-modal').classList.add('hidden'); document.getElementById('student-view').classList.add('hidden'); document.getElementById('blocked-view').classList.remove('hidden');
+    }
+</script>
+</body>
+</html>
