@@ -11,8 +11,8 @@
             --text-secondary: #7F8C8D; --danger: #B73A3A; --danger-light: #F9EBEB;
             --success: #388E3C; --warning: #F57C00;
         }
-        body { font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 900px; }
+        body { font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 900px; flex-grow: 1; }
         .card { background: var(--surface); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 2rem; margin-bottom: 1.5rem; position: relative; }
         h1 { font-size: 1.8rem; color: var(--primary-dark); margin-top: 0; }
         h2 { font-size: 1.5rem; color: var(--primary-dark); }
@@ -28,6 +28,8 @@
         button:hover, .btn-upload:hover { background-color: var(--primary-dark); }
         .btn-secondary { background-color: var(--text-secondary); }
         .btn-secondary:hover { background-color: #34495E; }
+        .btn-warning { background-color: var(--warning); padding: 6px 12px; font-size: 0.85rem; }
+        .btn-warning:hover { background-color: #E65100; }
         
         .hidden { display: none !important; }
         
@@ -44,7 +46,6 @@
         
         svg.icon { width: 24px; height: 24px; fill: currentColor; }
         
-        /* TABLA DE CALIFICACIONES */
         .results-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.95rem; }
         .results-table th, .results-table td { border: 1px solid #E0E0E0; padding: 12px; text-align: left; }
         .results-table th { background-color: var(--primary); color: white; }
@@ -56,9 +57,14 @@
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
         .modal-content { background: white; border-radius: 12px; padding: 30px 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border-top: 8px solid var(--danger); }
-        
         .status-container { text-align: center; padding: 40px 20px; border-radius: 12px; }
         #loading-screen { text-align: center; padding: 40px; }
+        
+        /* FOOTER ESTILIZADO */
+        .app-footer { width: 100%; max-width: 900px; text-align: center; padding: 20px 0; margin-top: auto; border-top: 1px solid #BDC3C7; color: var(--text-secondary); font-size: 0.9rem; }
+        .app-footer p { margin: 5px 0; }
+        .app-footer .quote { font-style: italic; color: var(--primary-dark); font-weight: 500; }
+
         @media (min-width: 600px) { button, .btn-upload { width: auto; padding: 12px 24px; } #submit-btn, #start-btn { width: 100%; } }
     </style>
 </head>
@@ -80,51 +86,45 @@
         <h2>Conectando con el Servidor...</h2>
     </div>
 
-    <!-- VISTA INSTRUCTOR -->
     <div id="instructor-view" class="card hidden">
         <h2>Panel de Administración</h2>
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
             <button onclick="window.showUploadPanel()">Configurar Examen</button>
             <button class="btn-secondary" onclick="window.showGradingPanel()">Ver Calificaciones</button>
         </div>
 
-        <!-- SECCIÓN DE CARGA -->
         <div id="instructor-upload" class="instructor-form">
             <div class="form-group"><label>Nombre de la Evaluación</label><input type="text" id="exam-name"></div>
             <div class="form-group"><label>Generación / Grupo</label><input type="text" id="exam-gen"></div>
             <div class="form-group"><label>Calificación Mínima Aprobatoria (%)</label><input type="number" id="exam-min-score" value="80"></div>
             <div class="form-group"><label>Tiempo (Minutos)</label><input type="number" id="exam-duration" value="60"></div>
             <input type="file" id="json-file" accept=".json" class="hidden">
-            <label for="json-file" class="btn-upload" id="upload-trigger">Cargar JSON a Firebase</label>
+            <label for="json-file" class="btn-upload" id="upload-trigger">Cargar JSON</label>
             <p id="status-text" style="color: var(--success); font-weight: bold; margin-top: 20px;"></p>
         </div>
 
-        <!-- SECCIÓN DE CALIFICACIONES -->
         <div id="instructor-grades" class="hidden">
-            <h3>Resultados de la Evaluación Activa</h3>
-            <p style="font-size: 0.9rem; color: var(--text-secondary);">El sistema comparará las entregas con la Llave Maestra oculta.</p>
+            <h3>Gestión y Resultados</h3>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Para otorgar una nueva oportunidad a un alumno bloqueado o reprobado, da clic en "Reiniciar Intento".</p>
             <button onclick="window.loadGrades()" style="margin-bottom: 15px; width: auto;">Actualizar Tabla</button>
             <div style="overflow-x: auto;">
                 <table class="results-table" id="grades-table">
                     <thead>
                         <tr>
                             <th>Alumno</th>
-                            <th>Tiempo</th>
-                            <th>Infracciones</th>
+                            <th>Tiempo / Infracciones</th>
                             <th>Aciertos</th>
                             <th>Calificación</th>
                             <th>Estatus</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="grades-body">
-                        <!-- Se llena dinámicamente -->
-                    </tbody>
+                    <tbody id="grades-body"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- VISTA ALUMNO -->
     <div id="student-view" class="card hidden">
         <h1 id="display-exam-name">Evaluación de Certificación</h1>
         <h3 id="display-exam-gen" style="color: var(--text-secondary); margin-top: -10px;"></h3>
@@ -134,6 +134,11 @@
                 <label>Nombre Completo</label><input type="text" id="student-name">
                 <br><br><label>Correo Electrónico</label><input type="email" id="student-email">
             </div>
+            <ul style="color: var(--danger); font-weight: 500; background: var(--danger-light); padding: 15px 15px 15px 35px; border-radius: 8px; font-size: 0.9rem;">
+                <li>El examen cuenta con un temporizador de <span id="display-duration">--</span> minutos.</li>
+                <li>Límite de 5 advertencias si cambias de pestaña o minimizas la pantalla.</li>
+                <li><strong>Solo se permite 1 intento por correo electrónico registrado.</strong></li>
+            </ul>
             <button onclick="window.startExam()" id="start-btn">Comenzar Examen</button>
         </div>
 
@@ -142,27 +147,31 @@
                 <div>Evaluación en curso</div><div class="timer-display" id="timer-text">00:00:00</div>
             </div>
             <div id="exam-container"></div>
-            <button id="submit-btn" onclick="window.submitExam(false)" style="background-color: var(--success); margin-top: 25px;">Finalizar y Enviar a la Nube</button>
+            <button id="submit-btn" onclick="window.submitExam(false)" style="background-color: var(--success); margin-top: 25px;">Finalizar Examen</button>
         </div>
     </div>
 
-    <!-- PANTALLAS DE ESTADO -->
     <div id="blocked-view" class="card status-container hidden" style="border: 2px solid var(--danger); background-color: var(--danger-light);">
-        <h1 style="color: var(--danger);">EXAMEN BLOQUEADO</h1>
-        <p>Has superado el límite de 5 infracciones.</p>
+        <h1 style="color: var(--danger);">EXAMEN ANULADO</h1>
+        <p>Has superado el límite de 5 infracciones o tu examen ha sido bloqueado por el sistema.</p>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">Para solicitar un intento extraordinario, debes comunicarte con tu instructor.</p>
     </div>
 
     <div id="success-view" class="card status-container hidden" style="border: 2px solid var(--success); background-color: #E8F5E9;">
         <h1 style="color: var(--success);">EXAMEN ENVIADO</h1>
-        <p id="success-message">Tus respuestas se han guardado. Tu instructor publicará los resultados.</p>
+        <p id="success-message">Tus respuestas han sido procesadas correctamente.</p>
     </div>
 
 </div>
 
-<!-- FIREBASE SDK -->
+<footer class="app-footer">
+    <p>Desarrollado con fines de innovación y crecimiento profesional.</p>
+    <p class="quote">"If you want different results, do not do the same things." - Albert Einstein</p>
+</footer>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDf5LjSwUoFN8g6VBpoRR3v15VUWPCF5M4",
@@ -177,11 +186,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // VARIABLES ESTUDIANTE
-    let questions = [];
-    let examConfig = {};
+    let questions = [], examConfig = {};
     let sessionData = { browserId: "", studentName: "", studentEmail: "", startTime: null };
-    let isExamActive = false, isBlocked = false, cheatCount = 0, lastInfractionTime = 0;
+    
+    // Candados de seguridad
+    let isExamActive = false, isBlocked = false, isHandlingInfraction = false;
+    let cheatCount = 0;
     const MAX_INFRACTIONS = 5;
     let timerInterval, timeRemainingSeconds = 0;
 
@@ -194,13 +204,13 @@
             document.getElementById('instructor-view').classList.remove('hidden');
         } else {
             try {
-                const docRef = doc(db, "exams", "active_exam");
-                const docSnap = await getDoc(docRef);
+                const docSnap = await getDoc(doc(db, "exams", "active_exam"));
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     examConfig = data.config; questions = data.questions;
                     document.getElementById('display-exam-name').innerText = examConfig.name;
                     document.getElementById('display-exam-gen').innerText = "Generación: " + examConfig.gen;
+                    document.getElementById('display-duration').innerText = examConfig.duration || 60;
                     document.getElementById('loading-screen').classList.add('hidden');
                     document.getElementById('student-view').classList.remove('hidden');
                 } else {
@@ -212,7 +222,7 @@
         }
     };
 
-    // --- LÓGICA DEL INSTRUCTOR ---
+    // --- INSTRUCTOR ---
     window.showUploadPanel = () => { document.getElementById('instructor-upload').classList.remove('hidden'); document.getElementById('instructor-grades').classList.add('hidden'); };
     window.showGradingPanel = () => { document.getElementById('instructor-upload').classList.add('hidden'); document.getElementById('instructor-grades').classList.remove('hidden'); window.loadGrades(); };
 
@@ -227,111 +237,136 @@
         reader.onload = async function(e) {
             try {
                 const rawData = JSON.parse(e.target.result);
-                
-                // 1. Datos para el alumno (Sin respuestas)
                 const studentSafeData = rawData.map(q => ({ q: q.q, opts: q.opts }));
                 const dbStruct = {
                     config: {
-                        name: document.getElementById('exam-name').value.trim(),
-                        gen: document.getElementById('exam-gen').value.trim(),
-                        minScore: parseInt(document.getElementById('exam-min-score').value.trim()),
-                        duration: parseInt(document.getElementById('exam-duration').value.trim()),
+                        name: document.getElementById('exam-name').value.trim(), gen: document.getElementById('exam-gen').value.trim(),
+                        minScore: parseInt(document.getElementById('exam-min-score').value.trim()), duration: parseInt(document.getElementById('exam-duration').value.trim()),
                         totalQuestions: studentSafeData.length
-                    },
-                    questions: studentSafeData,
-                    timestamp: new Date().toISOString()
+                    }, questions: studentSafeData, timestamp: new Date().toISOString()
                 };
-                
-                // 2. Llave Maestra (Solo respuestas correctas)
-                const masterKey = {
-                    examName: dbStruct.config.name,
-                    answers: rawData.map(q => q.ans)
-                };
+                const masterKey = { examName: dbStruct.config.name, answers: rawData.map(q => q.ans) };
 
-                document.getElementById('status-text').innerText = "Subiendo Examen y Llave Maestra...";
-                
-                // Guardar ambas colecciones
+                document.getElementById('status-text').innerText = "Subiendo Examen...";
                 await setDoc(doc(db, "exams", "active_exam"), dbStruct);
                 await setDoc(doc(db, "exam_keys", "active_exam"), masterKey);
-                
                 document.getElementById('status-text').innerText = `¡Éxito! Examen subido y asegurado en Firestore.`;
             } catch (err) { alert("Error al subir."); }
         };
         reader.readAsText(file);
     });
 
-    // PANEL DE CALIFICACIÓN AUTOMÁTICA
     window.loadGrades = async () => {
         const tbody = document.getElementById('grades-body');
-        tbody.innerHTML = "<tr><td colspan='6'>Calculando calificaciones...</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='6'>Cargando...</td></tr>";
         
         try {
-            // 1. Obtener la llave maestra
             const keySnap = await getDoc(doc(db, "exam_keys", "active_exam"));
             if (!keySnap.exists()) { tbody.innerHTML = "<tr><td colspan='6'>No hay llave maestra.</td></tr>"; return; }
             const correctAnswers = keySnap.data().answers;
-
-            // 2. Obtener todas las entregas
             const subQuery = await getDocs(collection(db, "submissions"));
             
             tbody.innerHTML = "";
             if (subQuery.empty) { tbody.innerHTML = "<tr><td colspan='6'>Nadie ha entregado aún.</td></tr>"; return; }
 
-            subQuery.forEach((doc) => {
-                const sub = doc.data();
+            subQuery.forEach((d) => {
+                const sub = d.data();
+                const docId = d.id; // ID Único del intento en Firestore
                 const totalQs = correctAnswers.length;
-                let score = 0;
                 
-                // Si fue bloqueado, reprobación directa
+                let btnAccion = `<button class="btn-warning" onclick="window.resetAttempt('${docId}')">Reiniciar Intento</button>`;
+                
                 if(sub.status === "BLOCKED") {
                     tbody.innerHTML += `<tr>
                         <td>${sub.student.name}<br><small>${sub.student.email}</small></td>
-                        <td>N/A</td><td style="color:red; font-weight:bold;">${sub.metrics.infractions}</td>
-                        <td>0 / ${totalQs}</td><td>0%</td>
-                        <td><span class="badge badge-blocked">ANULADO</span></td>
+                        <td style="color:red; font-weight:bold;"> Bloqueado (Inf: ${sub.metrics.infractions})</td>
+                        <td>--</td><td>--</td><td><span class="badge badge-blocked">ANULADO</span></td>
+                        <td>${btnAccion}</td>
                     </tr>`;
                     return;
                 }
 
-                // CALIFICAR
-                sub.answers.forEach(a => {
-                    if(a.selectedOption === correctAnswers[a.questionIndex]) { score++; }
-                });
-
+                let score = 0;
+                sub.answers.forEach(a => { if(a.selectedOption === correctAnswers[a.questionIndex]) score++; });
                 let percentage = (score / totalQs) * 100;
                 let passed = percentage >= sub.examInfo.passingThreshold;
                 let badgeClass = passed ? 'badge-pass' : 'badge-fail';
-                let badgeText = passed ? 'APROBADO' : 'REPROBADO';
                 let mins = Math.floor(sub.metrics.timeUsedSeconds / 60);
 
                 tbody.innerHTML += `<tr>
                     <td>${sub.student.name}<br><small>${sub.student.email}</small></td>
-                    <td>${mins} min</td>
-                    <td style="${sub.metrics.infractions > 0 ? 'color:red; font-weight:bold;' : ''}">${sub.metrics.infractions}</td>
+                    <td>${mins} min / <span style="${sub.metrics.infractions > 0 ? 'color:red; font-weight:bold;' : ''}">${sub.metrics.infractions} inf.</span></td>
                     <td>${score} / ${totalQs}</td>
                     <td style="font-weight:bold;">${percentage.toFixed(1)}%</td>
-                    <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                    <td><span class="badge ${badgeClass}">${passed ? 'APROBADO' : 'REPROBADO'}</span></td>
+                    <td>${btnAccion}</td>
                 </tr>`;
             });
-        } catch (e) {
-            console.error(e);
-            tbody.innerHTML = "<tr><td colspan='6'>Error al calcular calificaciones.</td></tr>";
+        } catch (e) { tbody.innerHTML = "<tr><td colspan='6'>Error al cargar.</td></tr>"; }
+    };
+
+    // ELIMINAR/RESETEAR INTENTO
+    window.resetAttempt = async (docId) => {
+        if(confirm("¿Estás seguro de eliminar este intento? Esto permitirá al alumno presentar el examen nuevamente.")) {
+            try {
+                await deleteDoc(doc(db, "submissions", docId));
+                window.loadGrades(); // Recargar tabla
+            } catch(e) { alert("Error al eliminar el intento."); }
         }
     };
 
-    // --- LÓGICA DEL ALUMNO ---
-    window.startExam = function() {
+    // --- ALUMNO ---
+    window.startExam = async function() {
         const nameInput = document.getElementById('student-name').value.trim();
-        const emailInput = document.getElementById('student-email').value.trim();
+        const emailInput = document.getElementById('student-email').value.trim().toLowerCase();
+        
         if(nameInput.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { alert("Datos inválidos."); return; }
 
-        sessionData.studentName = nameInput; sessionData.studentEmail = emailInput;
-        sessionData.browserId = 'BID-' + Date.now();
-        sessionData.startTime = new Date().getTime();
-
         document.getElementById('exam-intro').classList.add('hidden');
+        document.getElementById('loading-screen').classList.remove('hidden');
+
+        // VERIFICACIÓN DE INTENTO ÚNICO
+        try {
+            const q = query(collection(db, "submissions"), where("student.email", "==", emailInput));
+            const snapshot = await getDocs(q);
+            
+            let alreadyTaken = false;
+            let wasBlocked = false;
+
+            snapshot.forEach(d => {
+                if(d.data().examInfo.name === examConfig.name) {
+                    alreadyTaken = true;
+                    if(d.data().status === "BLOCKED") wasBlocked = true;
+                }
+            });
+
+            if (alreadyTaken) {
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('student-view').classList.add('hidden');
+                document.getElementById('blocked-view').classList.remove('hidden');
+                
+                if(wasBlocked) {
+                    document.querySelector('#blocked-view h1').innerText = "EXAMEN BLOQUEADO PREVIAMENTE";
+                } else {
+                    document.querySelector('#blocked-view h1').innerText = "INTENTO AGOTADO";
+                    document.querySelector('#blocked-view p').innerText = "Ya has completado este examen previamente.";
+                }
+                return;
+            }
+        } catch(e) {
+            alert("Error al verificar identidad. Revisa tu conexión.");
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('exam-intro').classList.remove('hidden');
+            return;
+        }
+
+        // Si pasa la validación, inicia el examen
+        sessionData.studentName = nameInput; sessionData.studentEmail = emailInput;
+        sessionData.startTime = new Date().getTime();
+        
+        document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('exam-wrapper').classList.remove('hidden');
-        isExamActive = true; isBlocked = false; cheatCount = 0;
+        isExamActive = true; isBlocked = false; cheatCount = 0; isHandlingInfraction = false;
         
         try { document.documentElement.requestFullscreen(); } catch(e) {}
         renderQuestions(); startTimer(examConfig.duration || 60);
@@ -360,7 +395,23 @@
     }
 
     window.submitExam = async function(isAutoSubmit = false) {
-        if (!isAutoSubmit && !confirm("¿Enviar examen?")) return;
+        if (!isAutoSubmit) {
+            let allAnswered = true, firstUnanswered = -1;
+            for (let i = 0; i < questions.length; i++) {
+                const qBlock = document.getElementById(`qblock_${i}`);
+                if (!document.querySelector(`input[name="question_${i}"]:checked`)) {
+                    allAnswered = false; qBlock.classList.add('question-error');
+                    if (firstUnanswered === -1) firstUnanswered = i;
+                } else { qBlock.classList.remove('question-error'); }
+            }
+            if (!allAnswered) {
+                alert(`Debes responder todas las preguntas. Falta la número ${firstUnanswered + 1}.`);
+                document.getElementById(`qblock_${firstUnanswered}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            if (!confirm("¿Seguro que deseas Finalizar el Examen?")) return;
+        }
+        
         isExamActive = false; clearInterval(timerInterval);
         
         let payload = {
@@ -376,21 +427,55 @@
 
         document.getElementById('student-view').classList.add('hidden');
         document.getElementById('loading-screen').classList.remove('hidden');
+        document.getElementById('loading-screen').innerHTML = "<h2>Enviando examen...</h2>";
         await addDoc(collection(db, "submissions"), payload);
+        
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('success-view').classList.remove('hidden');
+        if (isAutoSubmit) document.getElementById('success-message').innerHTML = "<strong>El tiempo se agotó.</strong> Examen enviado automáticamente.";
+        if(document.fullscreenElement) document.exitFullscreen();
     };
 
     window.closeModal = function() { document.getElementById('warning-modal').classList.add('hidden'); }
     
-    // ANTI-CHEAT
-    document.addEventListener("visibilitychange", () => { if(document.hidden && isExamActive && !isBlocked) { cheatCount++; document.getElementById('modal-count').innerText=cheatCount; document.getElementById('warning-modal').classList.remove('hidden'); if(cheatCount>=5) triggerBlock(); }});
-    window.addEventListener("blur", () => { if(isExamActive && !isBlocked) { cheatCount++; document.getElementById('modal-count').innerText=cheatCount; document.getElementById('warning-modal').classList.remove('hidden'); if(cheatCount>=5) triggerBlock(); }});
+    // --- LÓGICA ANTI-CHEAT CON CANDADO LÓGICO ---
+    function checkInfraction() {
+        if (!isExamActive || isBlocked || isHandlingInfraction) return;
+        
+        isHandlingInfraction = true; // Bloquea múltiples eventos simultáneos
+        cheatCount++;
+        
+        if (cheatCount >= MAX_INFRACTIONS) {
+            triggerBlock();
+        } else {
+            document.getElementById('modal-count').innerText = cheatCount;
+            document.getElementById('warning-modal').classList.remove('hidden');
+        }
+        
+        // Libera el candado después de 3 segundos
+        setTimeout(() => { isHandlingInfraction = false; }, 3000);
+    }
+
+    document.addEventListener("visibilitychange", () => { if(document.hidden) checkInfraction(); });
+    window.addEventListener("blur", checkInfraction);
 
     async function triggerBlock() {
         isBlocked = true; isExamActive = false; clearInterval(timerInterval);
-        await addDoc(collection(db, "submissions"), { student: { name: sessionData.studentName, email: sessionData.studentEmail }, status: "BLOCKED", metrics: { infractions: cheatCount } });
-        document.getElementById('warning-modal').classList.add('hidden'); document.getElementById('student-view').classList.add('hidden'); document.getElementById('blocked-view').classList.remove('hidden');
+        
+        document.getElementById('warning-modal').classList.add('hidden');
+        document.getElementById('student-view').classList.add('hidden');
+        document.getElementById('loading-screen').classList.remove('hidden');
+        document.getElementById('loading-screen').innerHTML = "<h2>Anulando examen...</h2>";
+        
+        await addDoc(collection(db, "submissions"), { 
+            student: { name: sessionData.studentName, email: sessionData.studentEmail }, 
+            examInfo: { name: examConfig.name },
+            status: "BLOCKED", metrics: { infractions: cheatCount } 
+        });
+        
+        document.getElementById('loading-screen').classList.add('hidden');
+        document.getElementById('blocked-view').classList.remove('hidden');
+        if(document.fullscreenElement) document.exitFullscreen();
     }
 </script>
 </body>
