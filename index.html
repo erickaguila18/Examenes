@@ -64,24 +64,26 @@
         .results-table th.sortable:hover { background-color: var(--primary-dark); }
         .results-table tr:nth-child(even) { background-color: #F9F9F9; }
         
-        /* COLORES PASTELES PARA LAS BADGES */
         .badge { padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
         .badge-pass { background-color: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; } 
         .badge-fail { background-color: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; } 
         .badge-blocked { background-color: #F5F5F5; color: #424242; border: 1px solid #E0E0E0; }
+        .badge-progress { background-color: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; }
         
         .exam-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #E0E0E0; border-radius: 8px; margin-bottom: 10px; background: #FAFAFA; flex-wrap: wrap; gap: 10px;}
         .exam-item.pending { border-left: 4px solid var(--warning); }
         
         /* MODALS & STATUS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
-        .modal-content { background: white; border-radius: 12px; padding: 30px 20px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal-content { background: white; border-radius: 12px; padding: 30px 20px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center;}
+        .modal-content h2, .modal-content p { text-align: center; justify-content: center; width: 100%; margin-left: auto; margin-right: auto;}
         .modal-content.danger-top { border-top: 8px solid var(--danger); }
         .modal-content.primary-top { border-top: 8px solid var(--primary); }
         .modal-icon { font-size: 64px; display: block; margin: 0 auto 15px auto; }
-        .dialog-actions { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
+        .dialog-actions { display: flex; justify-content: center; gap: 15px; margin-top: 25px; width: 100%;}
 
         .status-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; border-radius: 12px; }
+        .status-container h1, .status-container p { text-align: center; justify-content: center; width: 100%; }
 
         /* FOOTER */
         .app-footer { width: 100%; background: #2C3E50; color: white; text-align: center; padding: 20px 0; margin-top: auto; font-size: 0.9rem; }
@@ -105,7 +107,7 @@
             body * { visibility: hidden; }
             #instructor-grades, #instructor-grades * { visibility: visible; }
             #instructor-grades { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; padding: 0;}
-            .dialog-actions, button, .navbar, .app-footer, p[style*="background"] { display: none !important; }
+            .dialog-actions, button, .navbar, .app-footer, p[style*="background"], #share-container { display: none !important; }
             .table-responsive { border: none; overflow: visible; }
         }
     </style>
@@ -114,7 +116,7 @@
 
 <!-- NAVBAR -->
 <nav class="navbar">
-    <h2 onclick="window.closeAndGoHome()"><i class="fi fi-ss-heart-pulse"></i> Plataforma EEMS</h2>
+    <h2 onclick="window.closeAndGoHome()"><i class="fi fi-ss-briefcase-medical"></i> Plataforma EEMS</h2>
     <div class="nav-links" id="nav-actions">
         <button onclick="window.goHome()" id="nav-ingresar"><i class="fi fi-ss-sign-in-alt"></i> Ingresar</button>
     </div>
@@ -123,7 +125,7 @@
 <!-- SISTEMA DE DIÁLOGOS -->
 <div id="custom-dialog" class="modal-overlay hidden">
     <div id="dialog-box" class="modal-content primary-top">
-        <h2 id="dialog-title" style="margin-top: 0; color: var(--text-main);">Atención</h2>
+        <h2 id="dialog-title" style="color: var(--text-main);">Atención</h2>
         <p id="dialog-message" style="font-size: 1.1rem;"></p>
         <div class="dialog-actions">
             <button id="dialog-cancel-btn" class="btn-secondary hidden"><i class="fi fi-ss-cross"></i> Cancelar</button>
@@ -138,7 +140,7 @@
         <h2 style="color: var(--danger);">ADVERTENCIA DE SEGURIDAD</h2>
         <p id="warning-reason">Se detectó pérdida de enfoque del examen.</p>
         <p>Infracción: <strong id="modal-count" style="color: var(--danger); font-size: 1.5rem;"></strong> de <strong>5</strong></p>
-        <button onclick="window.closeModal()" style="background-color: var(--danger); width: 100%;"><i class="fi fi-ss-check"></i> Entendido</button>
+        <button onclick="window.closeModal()" style="background-color: var(--danger); width: 100%; margin-top: 15px;"><i class="fi fi-ss-check"></i> Entendido</button>
     </div>
 </div>
 
@@ -207,7 +209,7 @@
     <!-- DASHBOARD INSTRUCTOR -->
     <div id="instructor-dashboard" class="card hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-            <h2 style="margin: 0;"><i class="fi fi-ss-folder-tree"></i> Mis Evaluaciones</h2>
+            <h2 style="margin: 0;"><i class="fi fi-ss-folder-tree"></i> Mis Evaluaciones Creadas</h2>
         </div>
         <button onclick="window.showUploadPanel()" style="margin-bottom: 20px; width: 100%;"><i class="fi fi-ss-add-document"></i> Crear Nuevo Examen</button>
         <div id="exams-list-container"></div>
@@ -242,7 +244,14 @@
     <!-- CALIFICACIONES INSTRUCTOR -->
     <div id="instructor-grades" class="card hidden">
         <h2 id="grades-exam-title"><i class="fi fi-ss-stats"></i> Resultados</h2>
-        <p style="background: #FAFAFA; padding: 10px; border-radius: 6px; word-break: break-all;"><strong><i class="fi fi-ss-link-alt"></i> Link alumnos externos:</strong> <br> <a href="#" id="exam-share-link" target="_blank" style="color: var(--primary); font-weight: bold;"></a></p>
+        
+        <div id="share-container" style="background: #FAFAFA; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #E0E0E0;">
+            <p style="margin: 0 0 10px 0;"><strong><i class="fi fi-ss-link-alt"></i> Link para alumnos externos:</strong></p>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="#" id="exam-share-link" onclick="window.handleInstructorLinkClick(event)" style="color: var(--primary); font-weight: bold; word-break: break-all;"></a>
+                <button onclick="window.copyExamLink()" class="btn-secondary" style="width: auto; padding: 6px 12px; font-size: 0.85rem;"><i class="fi fi-ss-copy"></i> Copiar</button>
+            </div>
+        </div>
         
         <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
             <button class="btn-secondary" onclick="window.backToDashboard()"><i class="fi fi-ss-arrow-left"></i> Volver</button>
@@ -283,7 +292,7 @@
             <ul style="color: var(--danger); font-weight: 500; background: var(--danger-light); padding: 15px 15px 15px 35px; border-radius: 8px;">
                 <li><strong>Las preguntas y opciones aparecerán en orden aleatorio.</strong></li>
                 <li>Tiempo límite: <span id="display-duration">--</span> minutos.</li>
-                <li><strong>Cualquier intento de copiar o capturar pantalla anulará el examen.</strong></li>
+                <li><strong>Cualquier intento de copiar, recargar o capturar pantalla anulará el examen.</strong></li>
                 <li>Límite de 5 advertencias al perder enfoque.</li>
             </ul>
             <button onclick="window.startExamProcess()" id="start-btn"><i class="fi fi-ss-play"></i> Comenzar Examen</button>
@@ -303,7 +312,7 @@
     <div id="blocked-view" class="card status-container hidden" style="border: 2px solid var(--danger); background-color: var(--danger-light);">
         <i class="fi fi-ss-ban modal-icon" style="color: var(--danger);"></i>
         <h1 id="blocked-title" style="color: var(--danger); margin-bottom: 10px;">EXAMEN ANULADO</h1>
-        <p id="blocked-msg">Has superado el límite de infracciones o ya completaste este examen previamente.</p>
+        <p id="blocked-msg">Has superado el límite de infracciones o abandonaste el examen.</p>
         <button onclick="window.closeAndGoHome()" style="margin-top: 20px; width: auto;"><i class="fi fi-ss-cross"></i> Cerrar</button>
     </div>
 
@@ -373,12 +382,11 @@
     // VARIABLES GLOBALES
     let currentUser = null;
     let originalPool = [], renderedQuestions = [], examConfig = {};
-    let sessionData = { studentName: "", studentEmail: "", startTime: null };
+    let sessionData = { studentName: "", studentEmail: "", startTime: null, docId: null };
     let isExamActive = false, isBlocked = false, isHandlingInfraction = false, isPermanentlyBlocked = false;
     let cheatCount = 0; const MAX_INFRACTIONS = 5;
     let timerInterval, timeRemainingSeconds = 0;
     
-    // Variables Tabla Inteligente
     window.gradesList = []; 
     let currentSort = { column: '', asc: true };
 
@@ -407,7 +415,8 @@
     window.closeAndGoHome = () => {
         localStorage.clear(); 
         sessionStorage.clear();
-        window.location.replace(window.location.pathname);
+        history.pushState(null, null, location.href.split('?')[0]);
+        window.location.replace(window.location.href.split('?')[0]);
     };
 
     window.goHome = () => {
@@ -431,20 +440,43 @@
             window.loadStudentDashboard(); 
         } else {
             document.getElementById('role-selector').classList.remove('hidden');
-            document.getElementById('nav-ingresar').classList.add('hidden');
+            document.getElementById('nav-ingresar').classList.remove('hidden');
+            document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-sign-in-alt"></i> Ingresar`;
+            document.getElementById('nav-ingresar').onclick = () => window.showInstructorLogin();
         }
     };
 
     // Funciones de Logout
     window.logoutStudent = () => { window.closeAndGoHome(); };
-    window.logoutInstructor = async () => { await signOut(auth); window.closeAndGoHome(); };
+    
+    window.logoutInstructor = async () => { 
+        await signOut(auth); 
+        window.closeAndGoHome();
+    };
 
-    window.showInstructorLogin = () => { hideAll(); document.getElementById('login-view').classList.remove('hidden'); };
-    window.showStudentLogin = () => { hideAll(); document.getElementById('student-login-view').classList.remove('hidden'); };
+    window.showInstructorLogin = () => { 
+        hideAll(); 
+        document.getElementById('login-view').classList.remove('hidden'); 
+        document.getElementById('nav-ingresar').classList.remove('hidden');
+        document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
+        document.getElementById('nav-ingresar').onclick = window.goHome;
+    };
+    
+    window.showStudentLogin = () => { 
+        hideAll(); 
+        document.getElementById('student-login-view').classList.remove('hidden'); 
+        document.getElementById('nav-ingresar').classList.remove('hidden');
+        document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
+        document.getElementById('nav-ingresar').onclick = window.goHome;
+    };
 
     onAuthStateChanged(auth, async (user) => { 
         if (urlParams.get('admin') === 'true' && !user) {
-            hideAll(); document.getElementById('login-view').classList.remove('hidden');
+            hideAll(); 
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('nav-ingresar').classList.remove('hidden');
+            document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
+            document.getElementById('nav-ingresar').onclick = () => window.location.href = window.location.pathname;
         } else {
             currentUser = user; window.goHome(); 
         }
@@ -480,11 +512,13 @@
             subSnap.forEach(d => {
                 const sub = d.data();
                 completedExams[sub.examId] = sub;
+                
                 if (sub.status === "BLOCKED") {
                     historyHTML += `<tr><td>${sub.examInfo.name}</td><td>--</td><td>--</td><td><span class="badge badge-blocked"><i class="fi fi-ss-ban"></i> ANULADO</span></td></tr>`;
+                } else if (sub.status === "IN_PROGRESS") {
+                    historyHTML += `<tr><td>${sub.examInfo.name}</td><td>--</td><td>--</td><td><span class="badge badge-progress"><i class="fi fi-ss-spinner"></i> EN CURSO (ABANDONADO)</span></td></tr>`;
                 } else {
-                    let estatus = (sub.status === "COMPLETED") ? "FINALIZADO" : sub.status;
-                    historyHTML += `<tr><td>${sub.examInfo.name}</td><td>Entregado</td><td>Sujeto a Revisión</td><td><span class="badge badge-pass"><i class="fi fi-ss-check"></i> ${estatus}</span></td></tr>`;
+                    historyHTML += `<tr><td>${sub.examInfo.name}</td><td>Entregado</td><td>Sujeto a Revisión</td><td><span class="badge badge-pass"><i class="fi fi-ss-check"></i> FINALIZADO</span></td></tr>`;
                 }
             });
             document.getElementById('history-exams-list').innerHTML = historyHTML || "<tr><td colspan='4'>No has realizado ningún examen aún.</td></tr>";
@@ -578,6 +612,26 @@
         reader.readAsText(file);
     });
 
+    // --- COPIAR Y MANEJAR LINK COMPARTIDO ---
+    window.copyExamLink = () => {
+        const link = document.getElementById('exam-share-link').href;
+        navigator.clipboard.writeText(link).then(() => {
+            window.CustomDialog.alert("¡Enlace copiado al portapapeles!", "Éxito");
+        });
+    };
+
+    window.handleInstructorLinkClick = async (event) => {
+        event.preventDefault();
+        const url = event.currentTarget.href;
+        const isConfirmed = await window.CustomDialog.confirm("Estás a punto de ingresar al examen como alumno. Por seguridad, se cerrará tu sesión de instructor. ¿Deseas continuar?", "Aviso de Seguridad");
+        if(isConfirmed) {
+            await signOut(auth);
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = url;
+        }
+    };
+
     // --- ORDENAMIENTO Y EXPORTACIÓN ---
     window.sortGrades = (column) => {
         if (currentSort.column === column) { currentSort.asc = !currentSort.asc; } 
@@ -604,6 +658,7 @@
         window.gradesList.forEach(function(row) {
             let status = row.passed ? 'APROBADO' : 'REPROBADO';
             if(row.status === "BLOCKED") status = "ANULADO";
+            if(row.status === "IN_PROGRESS") status = "EN CURSO/ABANDONADO";
             let csvRow = `"${row.name}","${row.email}",${row.mins},${row.infractions},"${row.score}/${row.total}",${row.percentage.toFixed(1)}%,${status}`;
             csvContent += csvRow + "\n";
         });
@@ -627,6 +682,21 @@
 
         dataList.forEach((sub, i) => {
             let rowNumber = i + 1;
+            
+            // FILAS EN CURSO/ABANDONADAS
+            if (sub.status === "IN_PROGRESS") {
+                tbody.innerHTML += `<tr>
+                    <td style="text-align: center;"><b>${rowNumber}</b></td>
+                    <td>${sub.name}<br><small>${sub.email}</small></td>
+                    <td style="color:var(--warning); font-weight:bold;"><i class="fi fi-ss-time-quarter-to"></i> EN CURSO</td>
+                    <td>--</td><td>--</td>
+                    <td><span class="badge badge-progress"><i class="fi fi-ss-spinner"></i> EN CURSO</span></td>
+                    <td><button class="btn-warning" title="Reiniciar" onclick="window.resetAttempt('${sub.docId}')"><i class="fi fi-ss-refresh"></i></button></td>
+                </tr>`;
+                return;
+            }
+
+            // FILAS BLOQUEADAS
             if (sub.status === "BLOCKED") {
                 tbody.innerHTML += `<tr>
                     <td style="text-align: center;"><b>${rowNumber}</b></td>
@@ -634,15 +704,16 @@
                     <td style="color:red; font-weight:bold;"><i class="fi fi-ss-triangle-warning"></i> Inf: ${sub.infractions}</td>
                     <td>--</td><td>--</td>
                     <td><span class="badge badge-blocked"><i class="fi fi-ss-ban"></i> ANULADO</span></td>
-                    <td><button class="btn-warning" onclick="window.resetAttempt('${sub.docId}')"><i class="fi fi-ss-refresh"></i></button></td>
+                    <td><button class="btn-warning" title="Reiniciar" onclick="window.resetAttempt('${sub.docId}')"><i class="fi fi-ss-refresh"></i></button></td>
                 </tr>`;
                 return;
             }
 
+            // FILAS COMPLETADAS
             let badgeClass = sub.passed ? 'badge-pass' : 'badge-fail';
             let estatusTxt = sub.passed ? 'APROBADO' : 'REPROBADO';
             let iconEstatus = sub.passed ? 'fi-ss-check-circle' : 'fi-ss-cross-circle';
-            
+
             tbody.innerHTML += `<tr>
                 <td style="text-align: center;"><b>${rowNumber}</b></td>
                 <td>${sub.name}<br><small>${sub.email}</small></td>
@@ -692,9 +763,9 @@
                 
                 window.gradesList.push({
                     docId: d.id, name: sub.student.name, email: sub.student.email,
-                    status: sub.status, infractions: sub.metrics.infractions,
+                    status: sub.status, infractions: sub.metrics?.infractions || 0,
                     score: score, total: evalTotal, percentage: percentage, passed: passed,
-                    mins: Math.floor(sub.metrics.timeUsedSeconds / 60) || 0
+                    mins: Math.floor(sub.metrics?.timeUsedSeconds / 60) || 0
                 });
             });
             renderGradesTable(window.gradesList);
@@ -755,18 +826,48 @@
         document.getElementById('loading-screen').classList.remove('hidden');
 
         try {
+            // VERIFICAR ESTADO DEL INTENTO PREVIO
             const qb = query(collection(db, "submissions"), where("examId", "==", window.currentExamId), where("student.email", "==", emailInput));
             const snapshot = await getDocs(qb);
+            
             if (!snapshot.empty) {
+                let existingStatus = null;
+                snapshot.forEach(d => { existingStatus = d.data().status; });
+                
                 hideAll(); document.getElementById('blocked-view').classList.remove('hidden');
-                document.getElementById('blocked-title').innerText = "INTENTO AGOTADO";
-                document.getElementById('blocked-msg').innerText = "Ya has completado este examen previamente.";
+                document.getElementById('nav-actions').classList.remove('hidden');
+                
+                if (existingStatus === "COMPLETED") {
+                    document.getElementById('blocked-title').innerText = "INTENTO AGOTADO";
+                    document.getElementById('blocked-msg').innerText = "Ya has completado este examen previamente.";
+                } else if (existingStatus === "BLOCKED") {
+                    document.getElementById('blocked-title').innerText = "EXAMEN ANULADO";
+                    document.getElementById('blocked-msg').innerText = "Tu examen fue anulado previamente por infracciones de seguridad.";
+                } else if (existingStatus === "IN_PROGRESS") {
+                    document.getElementById('blocked-title').innerText = "INTENTO ANULADO";
+                    document.getElementById('blocked-msg').innerText = "Se detectó que el examen fue cerrado o recargado sin finalizar. Contacta a tu instructor para solicitar un reinicio.";
+                    // Convertir el abandono en bloqueo permanente
+                    snapshot.forEach(async (d) => {
+                        await setDoc(doc(db, "submissions", d.id), { status: "BLOCKED", metrics: { detail: "Abandono de examen (Cierre de ventana)." } }, { merge: true });
+                    });
+                }
                 return;
             }
-        } catch(e) { return window.CustomDialog.alert("Error al verificar identidad."); }
+        } catch(e) { return window.CustomDialog.alert("Error de conexión."); }
 
         sessionData.studentName = nameInput; sessionData.studentEmail = emailInput;
         sessionData.startTime = new Date().getTime();
+        
+        // MARCAR INICIO EN BD PARA PREVENIR RECARGAS TRAMPOSAS
+        const newSubRef = await addDoc(collection(db, "submissions"), {
+            examId: window.currentExamId,
+            student: { name: nameInput, email: emailInput },
+            examInfo: { name: examConfig.name, passingThreshold: examConfig.minScore, questionsToShow: examConfig.questionsToShow || originalPool.length },
+            status: "IN_PROGRESS",
+            metrics: { infractions: 0, startTime: new Date().toISOString() },
+            answers: []
+        });
+        sessionData.docId = newSubRef.id;
         
         let shuffledPool = shuffleArray([...originalPool]);
         const maxQuestions = examConfig.questionsToShow || shuffledPool.length;
@@ -827,11 +928,9 @@
         document.getElementById('nav-actions').classList.remove('hidden'); 
         
         let payload = {
-            examId: window.currentExamId,
-            student: { name: sessionData.studentName, email: sessionData.studentEmail },
-            examInfo: { name: examConfig.name, passingThreshold: examConfig.minScore, questionsToShow: examConfig.questionsToShow || originalPool.length },
             metrics: { infractions: cheatCount, timeUsedSeconds: Math.floor((new Date().getTime() - sessionData.startTime) / 1000) },
-            status: "COMPLETED", answers: []
+            status: "COMPLETED", 
+            answers: []
         };
         
         renderedQuestions.forEach((item) => {
@@ -840,7 +939,8 @@
         });
 
         hideAll(); document.getElementById('loading-screen').classList.remove('hidden');
-        await addDoc(collection(db, "submissions"), payload);
+        await setDoc(doc(db, "submissions", sessionData.docId), payload, { merge: true });
+        
         hideAll(); document.getElementById('success-view').classList.remove('hidden');
         if(document.fullscreenElement) document.exitFullscreen();
     };
@@ -854,12 +954,12 @@
         await cancelExamDb(reason);
     }
 
-    function checkInfraction(reason = "Exceso de pérdida de enfoque.") {
+    function checkInfraction(reason = "Se detectó pérdida de enfoque del examen.") {
         if (!isExamActive || isBlocked || isHandlingInfraction) return;
         isHandlingInfraction = true; cheatCount++;
         if (cheatCount >= MAX_INFRACTIONS) { cancelExamDb(reason); } 
         else { 
-            document.getElementById('warning-reason').innerText = "Se detectó pérdida de enfoque del examen.";
+            document.getElementById('warning-reason').innerText = reason;
             document.getElementById('modal-count').innerText = cheatCount;
             document.getElementById('warning-modal').classList.remove('hidden');
         }
@@ -877,10 +977,7 @@
             document.getElementById('blocked-msg').innerText = logReason;
             document.getElementById('blocked-view').classList.remove('hidden');
         }
-        await addDoc(collection(db, "submissions"), { 
-            examId: window.currentExamId, student: { name: sessionData.studentName, email: sessionData.studentEmail }, 
-            examInfo: { name: examConfig.name }, status: "BLOCKED", metrics: { infractions: cheatCount, detail: logReason } 
-        });
+        await setDoc(doc(db, "submissions", sessionData.docId), { status: "BLOCKED", metrics: { infractions: cheatCount, detail: logReason } }, { merge: true });
         if(document.fullscreenElement) document.exitFullscreen();
         window.location.replace(window.location.href);
     }
@@ -890,15 +987,15 @@
     window.closeModal = function() { document.getElementById('warning-modal').classList.add('hidden'); }
 
     document.addEventListener('keyup', (e) => {
-        if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) { triggerSevereInfraction("Captura de pantalla de sistema detectada."); }
+        if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) { triggerSevereInfraction("Captura de pantalla detectada."); }
     });
     document.addEventListener('keydown', (e) => {
         if (isExamActive && (e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 's' || e.key === 'S' || e.key === '3' || e.key === '4')) {
-            triggerSevereInfraction("Comando de recorte de pantalla detectado.");
+            triggerSevereInfraction("Comando de recorte detectado.");
         }
     });
     document.addEventListener('copy', (e) => {
-        if(isExamActive) { e.preventDefault(); triggerSevereInfraction("Intento de copiado al portapapeles detectado."); }
+        if(isExamActive) { e.preventDefault(); triggerSevereInfraction("Intento de copiado detectado."); }
     });
 </script>
 </body>
