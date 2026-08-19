@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Plataforma de Evaluaciones TUMB</title>
+    <title>Plataforma EEMS - Evaluaciones</title>
     
     <!-- Icons by Flaticon: https://www.flaticon.com/uicons -->
-    <!-- Se agregan atribuciones de Flaticon Uicons Solid Straight para uso en la interfaz -->
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/4.0.0/uicons-solid-straight/css/uicons-solid-straight.css'>
     
     <style>
-        @import url('https://cdn-uicons.flaticon.com/4.0.0/uicons-solid-straight/css/uicons-solid-straight.css');
-
         :root {
             --primary: #0288D1; --primary-light: #5EB8FF; --primary-dark: #005B9F;
             --bg-color: #F0F4F8; --surface: #FFFFFF; --text-main: #2C3E50;
@@ -20,31 +17,36 @@
         }
         body { font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; user-select: none; }
         
+        /* NAVBAR */
         .navbar { width: 100%; background-color: var(--primary-dark); color: white; padding: 15px 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000;}
-        .navbar h2 { margin: 0; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; gap: 8px;}
-        .nav-links button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); padding: 8px 15px; font-size: 0.9rem; margin-left: 10px; width: auto; }
+        .navbar h2 { margin: 0; font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; gap: 10px;}
+        .nav-links button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); padding: 8px 15px; font-size: 0.9rem; margin-left: 10px; width: auto; display: inline-flex; align-items: center; gap: 8px; color: white;}
         .nav-links button:hover { background: rgba(255,255,255,0.2); }
 
+        /* CONTAINERS & CARDS */
         .container { width: 100%; max-width: 950px; flex-grow: 1; padding: 20px; box-sizing: border-box; }
         .card { background: var(--surface); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 2rem; margin-bottom: 1.5rem; position: relative; }
-        h1, h2, h3 { color: var(--primary-dark); margin-top: 0; display: flex; align-items: center; gap: 8px; }
+        h1, h2, h3 { color: var(--primary-dark); margin-top: 0; display: flex; align-items: center; gap: 10px; }
         p { line-height: 1.6; }
         
+        /* FORMS */
         .form-group { margin-bottom: 20px; text-align: left; }
         .form-group label { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
-        input[type="text"], input[type="email"], input[type="number"], input[type="password"], input[type="datetime-local"] { width: 100%; padding: 12px 12px 12px 15px; border: 1px solid #BDC3C7; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 1rem; transition: border-color 0.3s; }
+        input[type="text"], input[type="email"], input[type="number"], input[type="password"], input[type="datetime-local"] { width: 100%; padding: 12px 15px; border: 1px solid #BDC3C7; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 1rem; transition: border-color 0.3s; }
         input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(2, 136, 209, 0.2); }
         
+        /* BUTTONS */
         button, .btn-upload { background-color: var(--primary); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; text-transform: uppercase; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-sizing: border-box; text-decoration: none;}
         button:hover, .btn-upload:hover { background-color: var(--primary-dark); }
         .btn-secondary { background-color: var(--text-secondary); }
-        .btn-warning { background-color: var(--warning); padding: 8px 12px; font-size: 0.85rem; }
-        .btn-success { background-color: var(--success); padding: 8px 12px; font-size: 0.85rem; }
-        .btn-danger { background-color: var(--danger); }
+        .btn-warning { background-color: var(--warning); padding: 8px 15px; font-size: 0.85rem; }
+        .btn-success { background-color: var(--success); padding: 8px 15px; font-size: 0.85rem; }
+        .btn-danger { background-color: var(--danger); padding: 8px 15px; font-size: 0.85rem;}
         
         .hidden { display: none !important; }
         
-        .sticky-header { position: sticky; top: 70px; background: var(--surface); padding: 15px; z-index: 100; border-bottom: 3px solid var(--primary); display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
+        /* EXAM ELEMENTS */
+        .sticky-header { position: sticky; top: 60px; background: var(--surface); padding: 15px; z-index: 100; border-bottom: 3px solid var(--primary); display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
         .timer-display { font-size: 1.4rem; font-weight: bold; color: var(--primary-dark); font-family: monospace; display: flex; align-items: center; gap: 8px;}
         .timer-danger { color: var(--danger); animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
@@ -53,21 +55,22 @@
         .option-label { display: flex; align-items: center; margin: 10px 0; padding: 14px; border: 1px solid #E0E0E0; border-radius: 8px; cursor: pointer; background: var(--surface); }
         input[type="radio"] { margin-right: 15px; transform: scale(1.3); accent-color: var(--primary); }
         
-        /* TABLAS DE CALIFICACIONES (MEJORADAS) */
-        .results-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.95rem; }
-        .results-table th, .results-table td { border: 1px solid #E0E0E0; padding: 12px; text-align: left; }
+        /* TABLES */
+        .table-responsive { overflow-x: auto; width: 100%; border: 1px solid #E0E0E0; border-radius: 8px; margin-top: 15px; background: white;}
+        .results-table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 0.95rem; white-space: nowrap; }
+        .results-table th, .results-table td { border-bottom: 1px solid #E0E0E0; padding: 15px; text-align: left; }
         .results-table th { background-color: var(--primary); color: white; user-select: none; }
         .results-table th.sortable { cursor: pointer; transition: background 0.2s; }
         .results-table th.sortable:hover { background-color: var(--primary-dark); }
         .results-table tr:nth-child(even) { background-color: #F9F9F9; }
         
-        .badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; color: white; display: inline-flex; align-items: center; gap: 5px;}
+        .badge { padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; color: white; display: inline-flex; align-items: center; gap: 5px;}
         .badge-pass { background-color: var(--success); } .badge-fail { background-color: var(--danger); } .badge-blocked { background-color: #333; }
         
-        .exam-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #E0E0E0; border-radius: 8px; margin-bottom: 10px; background: #FAFAFA; }
+        .exam-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #E0E0E0; border-radius: 8px; margin-bottom: 10px; background: #FAFAFA; flex-wrap: wrap; gap: 10px;}
         .exam-item.pending { border-left: 4px solid var(--warning); }
         
-        /* MODALES */
+        /* MODALS & STATUS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
         .modal-content { background: white; border-radius: 12px; padding: 30px 20px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
         .modal-content.danger-top { border-top: 8px solid var(--danger); }
@@ -75,19 +78,40 @@
         .modal-icon { font-size: 64px; display: block; margin: 0 auto 15px auto; }
         .dialog-actions { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
 
-        .status-container { text-align: center; padding: 40px 20px; border-radius: 12px; }
+        .status-container { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; border-radius: 12px; }
 
+        /* FOOTER */
         .app-footer { width: 100%; background: #2C3E50; color: white; text-align: center; padding: 20px 0; margin-top: auto; font-size: 0.9rem; }
         .app-footer p { margin: 5px 0; color: #BDC3C7;}
-        .app-footer .quote { font-style: italic; color: #F1C40F; font-weight: 500; margin-top: 10px;}
+        .app-footer .quote { font-style: italic; color: #BDC3C7; font-weight: 500; margin-top: 10px;}
 
+        /* MOBILE RESPONSIVENESS */
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .card { padding: 1.2rem; }
+            .grid-layout { grid-template-columns: 1fr; gap: 10px;}
+            .sticky-header { flex-direction: column; gap: 10px; position: relative; top: 0;}
+            .exam-item button { width: 100%; }
+        }
         @media (min-width: 600px) { button, .btn-upload { width: auto; padding: 12px 24px; } #submit-btn, #start-btn, #login-btn, #std-login-btn { width: 100%; } }
+
+        /* CSS PARA IMPRESIÓN PDF */
+        @media print {
+            body * { visibility: hidden; }
+            #instructor-grades, #instructor-grades * { visibility: visible; }
+            #instructor-grades { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; padding: 0;}
+            .dialog-actions, button, .navbar, .app-footer, p[style*="background"] { display: none !important; }
+            .table-responsive { border: none; overflow: visible; }
+        }
     </style>
 </head>
 <body>
 
+<!-- NAVBAR -->
 <nav class="navbar">
-    <h2 onclick="window.goHome()"><i class="fi fi-ss-heart-pulse"></i> Cruz Roja TUMB</h2>
+    <h2 onclick="window.goHome()"><i class="fi fi-ss-briefcase-medical"></i> Plataforma EEMS</h2>
     <div class="nav-links" id="nav-actions">
         <button onclick="window.goHome()" id="nav-ingresar"><i class="fi fi-ss-sign-in-alt"></i> Ingresar</button>
     </div>
@@ -109,9 +133,9 @@
     <div class="modal-content danger-top">
         <i class="fi fi-ss-triangle-warning modal-icon" style="color: var(--warning);"></i>
         <h2 style="color: var(--danger);">ADVERTENCIA DE SEGURIDAD</h2>
-        <p>Se detectó pérdida de enfoque del examen.</p>
+        <p id="warning-reason">Se detectó pérdida de enfoque del examen.</p>
         <p>Infracción: <strong id="modal-count" style="color: var(--danger); font-size: 1.5rem;"></strong> de <strong>5</strong></p>
-        <button onclick="window.closeModal()" style="background-color: var(--danger);"><i class="fi fi-ss-check"></i> Entendido</button>
+        <button onclick="window.closeModal()" style="background-color: var(--danger); width: 100%;"><i class="fi fi-ss-check"></i> Entendido</button>
     </div>
 </div>
 
@@ -129,7 +153,6 @@
 
     <div id="loading-screen" class="card" style="text-align: center; padding: 40px;">
         <i class="fi fi-ss-spinner" style="font-size: 48px; color: var(--primary); display: inline-block; animation: spin 2s linear infinite;"></i>
-        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
         <h2>Cargando Sistema...</h2>
     </div>
 
@@ -170,7 +193,7 @@
         <div id="pending-exams-list">Cargando...</div>
 
         <h3 style="margin-top: 30px; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-folder-open"></i> Historial de Calificaciones</h3>
-        <div style="overflow-x: auto;">
+        <div class="table-responsive">
             <table class="results-table">
                 <thead><tr><th>Examen</th><th>Aciertos</th><th>Calificación</th><th>Estatus</th></tr></thead>
                 <tbody id="history-exams-list"></tbody>
@@ -180,8 +203,8 @@
 
     <!-- DASHBOARD INSTRUCTOR -->
     <div id="instructor-dashboard" class="card hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <h2><i class="fi fi-ss-folder-tree"></i> Mis Evaluaciones Creadas</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+            <h2 style="margin: 0;"><i class="fi fi-ss-folder-tree"></i> Mis Evaluaciones</h2>
         </div>
         <button onclick="window.showUploadPanel()" style="margin-bottom: 20px; width: 100%;"><i class="fi fi-ss-add-document"></i> Crear Nuevo Examen</button>
         <div id="exams-list-container"></div>
@@ -192,16 +215,16 @@
         <h2><i class="fi fi-ss-file-edit"></i> Configurar Nuevo Examen</h2>
         <button class="btn-secondary" onclick="window.backToDashboard()" style="margin-bottom: 20px;"><i class="fi fi-ss-arrow-left"></i> Volver</button>
         
-        <div class="form-group"><label><i class="fi fi-ss-text"></i> Nombre de la Evaluación</label><input type="text" id="exam-name"></div>
-        <div class="form-group"><label><i class="fi fi-ss-users-alt"></i> Generación Destino</label><input type="text" id="exam-gen"></div>
+        <div class="form-group"><label><i class="fi fi-ss-text"></i> Nombre de la Evaluación</label><input type="text" id="exam-name" placeholder="Ej. Examen Módulo 1"></div>
+        <div class="form-group"><label><i class="fi fi-ss-users-alt"></i> Generación Destino</label><input type="text" id="exam-gen" placeholder="Ej. G-30"></div>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+        <div class="grid-layout">
             <div class="form-group">
-                <label><i class="fi fi-ss-shuffle"></i> Preguntas a Mostrar</label>
+                <label><i class="fi fi-ss-shuffle"></i> Preguntas Mostrar</label>
                 <input type="number" id="exam-q-to-show" placeholder="Ej. 10" min="1">
             </div>
-            <div class="form-group"><label><i class="fi fi-ss-bullseye"></i> Aprobatorio Mínimo (%)</label><input type="number" id="exam-min-score" value="80"></div>
-            <div class="form-group"><label><i class="fi fi-ss-time-quarter-to"></i> Tiempo (Minutos)</label><input type="number" id="exam-duration" value="60"></div>
+            <div class="form-group"><label><i class="fi fi-ss-bullseye"></i> Aprobar Mínimo (%)</label><input type="number" id="exam-min-score" value="80"></div>
+            <div class="form-group"><label><i class="fi fi-ss-time-quarter-to"></i> Tiempo (Min)</label><input type="number" id="exam-duration" value="60"></div>
         </div>
         
         <div class="form-group" style="background: #FFF3E0; padding: 15px; border-left: 4px solid var(--warning); border-radius: 8px;">
@@ -216,14 +239,16 @@
     <!-- CALIFICACIONES INSTRUCTOR -->
     <div id="instructor-grades" class="card hidden">
         <h2 id="grades-exam-title"><i class="fi fi-ss-stats"></i> Resultados</h2>
-        <p style="background: #FAFAFA; padding: 10px; border-radius: 6px;"><strong><i class="fi fi-ss-link-alt"></i> Link alumnos externos:</strong> <a href="#" id="exam-share-link" target="_blank" style="color: var(--primary); font-weight: bold; word-break: break-all;"></a></p>
+        <p style="background: #FAFAFA; padding: 10px; border-radius: 6px; word-break: break-all;"><strong><i class="fi fi-ss-link-alt"></i> Link alumnos externos:</strong> <br> <a href="#" id="exam-share-link" target="_blank" style="color: var(--primary); font-weight: bold;"></a></p>
         
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
             <button class="btn-secondary" onclick="window.backToDashboard()"><i class="fi fi-ss-arrow-left"></i> Volver</button>
-            <button onclick="window.loadGrades(window.currentExamId)"><i class="fi fi-ss-refresh"></i> Actualizar Tabla</button>
+            <button onclick="window.loadGrades(window.currentExamId)"><i class="fi fi-ss-refresh"></i> Actualizar</button>
+            <button class="btn-success" onclick="window.exportToCSV()"><i class="fi fi-ss-file-excel"></i> Exportar CSV</button>
+            <button class="btn-danger" onclick="window.print()`"><i class="fi fi-ss-file-pdf"></i> Imprimir / PDF</button>
         </div>
         
-        <div style="overflow-x: auto;">
+        <div class="table-responsive">
             <table class="results-table" id="grades-table">
                 <thead>
                     <tr>
@@ -274,21 +299,22 @@
     <!-- ESTADOS FINALES -->
     <div id="blocked-view" class="card status-container hidden" style="border: 2px solid var(--danger); background-color: var(--danger-light);">
         <i class="fi fi-ss-ban modal-icon" style="color: var(--danger);"></i>
-        <h1 id="blocked-title" style="color: var(--danger);">EXAMEN ANULADO</h1>
+        <h1 id="blocked-title" style="color: var(--danger); margin-bottom: 10px;">EXAMEN ANULADO</h1>
         <p id="blocked-msg">Has superado el límite de infracciones o ya completaste este examen previamente.</p>
+        <button onclick="window.goHome()" style="margin-top: 20px; width: auto;"><i class="fi fi-ss-arrow-left"></i> Regresar</button>
     </div>
 
     <div id="success-view" class="card status-container hidden" style="border: 2px solid var(--success); background-color: #E8F5E9;">
         <i class="fi fi-ss-check-circle modal-icon" style="color: var(--success);"></i>
-        <h1 style="color: var(--success);">EXAMEN ENVIADO</h1>
+        <h1 style="color: var(--success); margin-bottom: 10px;">EXAMEN ENVIADO</h1>
         <p>Tus respuestas han sido procesadas correctamente.</p>
-        <button onclick="window.goHome()" style="margin-top: 20px;"><i class="fi fi-ss-user"></i> Ir a mi Perfil</button>
+        <button onclick="window.goHome()" style="margin-top: 20px; width: auto;"><i class="fi fi-ss-user"></i> Ir a mi Perfil</button>
     </div>
 
 </div>
 
 <footer class="app-footer">
-    <p>Desarrollado por Enkodo by EAM - Versión Beta 1.0</p>
+    <p>Desarrollado por Enkodo by EAM - Versión BETA 1.0</p>
     <p class="quote">"If you want different results, do not do the same things." - Albert Einstein</p>
 </footer>
 
@@ -349,18 +375,18 @@
     let cheatCount = 0; const MAX_INFRACTIONS = 5;
     let timerInterval, timeRemainingSeconds = 0;
     
-    // Variables para la Tabla Inteligente
     window.gradesList = []; 
     let currentSort = { column: '', asc: true };
 
     const urlParams = new URLSearchParams(window.location.search);
     window.currentExamId = urlParams.get('examId'); 
 
-    // --- MANEJO DE HISTORIAL (Evitar "Atrás") ---
+    // --- MANEJO DE HISTORIAL Y CIERRE SEGURO ---
     window.addEventListener('pageshow', function(event) {
         if (localStorage.getItem('estado_examen_bloqueado') === 'true') {
             hideAll();
             document.getElementById('blocked-title').innerText = "EXAMEN ANULADO";
+            document.getElementById('blocked-msg').innerText = "El sistema detectó que intentaste regresar al examen bloqueado.";
             document.getElementById('blocked-view').classList.remove('hidden');
             isPermanentlyBlocked = true;
         }
@@ -378,6 +404,7 @@
         }
         hideAll();
         isExamActive = false; clearInterval(timerInterval);
+        document.getElementById('nav-actions').classList.remove('hidden'); 
         
         if (window.currentExamId) { loadExamView(); } 
         else if (currentUser) { window.backToDashboard(); } 
@@ -389,18 +416,17 @@
         }
     };
 
-    // LOGOUT SEGURO
     window.logoutStudent = () => { 
         localStorage.clear(); sessionStorage.clear();
         history.pushState(null, null, location.href.split('?')[0]);
-        window.location.replace(window.location.pathname); 
+        window.location.replace(window.location.href.split('?')[0]); 
     };
     
     window.logoutInstructor = async () => { 
         await signOut(auth); 
         localStorage.clear(); sessionStorage.clear();
         history.pushState(null, null, location.href.split('?')[0]);
-        window.location.replace(window.location.pathname + '?admin=true'); 
+        window.location.replace(window.location.href.split('?')[0] + '?admin=true'); 
     };
 
     window.showInstructorLogin = () => { hideAll(); document.getElementById('login-view').classList.remove('hidden'); };
@@ -463,7 +489,7 @@
                     const qToShow = eData.config.questionsToShow || eData.config.totalQuestions;
                     pendingHTML += `<div class="exam-item pending">
                         <div><strong>${eData.config.name}</strong><br><small style="color:var(--text-secondary)">Preguntas Evaluadas: ${qToShow}</small></div>
-                        <button style="width:auto;" onclick="location.href='?examId=${examId}'"><i class="fi fi-ss-play"></i> Presentar Ahora</button>
+                        <button style="width:auto;" onclick="location.href='?examId=${examId}'"><i class="fi fi-ss-play"></i> Presentar</button>
                     </div>`;
                 }
             });
@@ -542,7 +568,7 @@
         reader.readAsText(file);
     });
 
-    // --- ORDENAMIENTO DE TABLA ---
+    // --- ORDENAMIENTO Y EXPORTACIÓN ---
     window.sortGrades = (column) => {
         if (currentSort.column === column) {
             currentSort.asc = !currentSort.asc;
@@ -565,27 +591,44 @@
         renderGradesTable(sorted);
     };
 
+    window.exportToCSV = function() {
+        if(!window.gradesList || window.gradesList.length === 0) return window.CustomDialog.alert("No hay datos para exportar.");
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Alumno,Correo,Tiempo(m),Infracciones,Aciertos,Calificación,Estatus\n";
+        window.gradesList.forEach(function(row) {
+            let status = row.passed ? 'APROBADO' : 'REPROBADO';
+            if(row.status === "BLOCKED") status = "ANULADO";
+            let csvRow = `"${row.name}","${row.email}",${row.mins},${row.infractions},"${row.score}/${row.total}",${row.percentage.toFixed(1)}%,${status}`;
+            csvContent += csvRow + "\n";
+        });
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "Resultados_EEMS.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     function renderGradesTable(dataList) {
         const tbody = document.getElementById('grades-body');
         tbody.innerHTML = "";
         
         if (dataList.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No hay entregas.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>No hay entregas.</td></tr>";
             return;
         }
 
         dataList.forEach((sub, i) => {
             let rowNumber = i + 1;
-            
             if (sub.status === "BLOCKED") {
                 tbody.innerHTML += `<tr>
                     <td style="text-align: center;"><b>${rowNumber}</b></td>
                     <td>${sub.name}<br><small>${sub.email}</small></td>
                     <td style="color:red; font-weight:bold;"><i class="fi fi-ss-triangle-warning"></i> Inf: ${sub.infractions}</td>
-                    <td>--</td>
-                    <td>--</td>
+                    <td>--</td><td>--</td>
                     <td><span class="badge badge-blocked"><i class="fi fi-ss-ban"></i> ANULADO</span></td>
-                    <td><button class="btn-warning" onclick="window.resetAttempt('${sub.docId}')"><i class="fi fi-ss-refresh"></i> Reiniciar</button></td>
+                    <td><button class="btn-warning" onclick="window.resetAttempt('${sub.docId}')"><i class="fi fi-ss-refresh"></i></button></td>
                 </tr>`;
                 return;
             }
@@ -632,7 +675,7 @@
             const q = query(collection(db, "submissions"), where("examId", "==", examId));
             const subQuery = await getDocs(q);
             
-            window.gradesList = []; // Limpiar lista global
+            window.gradesList = []; 
             
             subQuery.forEach((d) => {
                 const sub = d.data(); 
@@ -646,21 +689,13 @@
                 let passed = percentage >= sub.examInfo.passingThreshold;
                 
                 window.gradesList.push({
-                    docId: d.id,
-                    name: sub.student.name,
-                    email: sub.student.email,
-                    status: sub.status,
-                    infractions: sub.metrics.infractions,
-                    score: score,
-                    total: evalTotal,
-                    percentage: percentage,
-                    passed: passed,
+                    docId: d.id, name: sub.student.name, email: sub.student.email,
+                    status: sub.status, infractions: sub.metrics.infractions,
+                    score: score, total: evalTotal, percentage: percentage, passed: passed,
                     mins: Math.floor(sub.metrics.timeUsedSeconds / 60) || 0
                 });
             });
-
             renderGradesTable(window.gradesList);
-
         } catch (e) { tbody.innerHTML = "<tr><td colspan='7'>Error al cargar.</td></tr>"; }
     };
 
@@ -702,7 +737,10 @@
                 document.getElementById('manual-student-data').classList.remove('hidden');
             }
 
-            hideAll(); document.getElementById('exam-view').classList.remove('hidden');
+            hideAll(); 
+            document.getElementById('exam-view').classList.remove('hidden');
+            document.getElementById('exam-intro').classList.remove('hidden');
+            document.getElementById('exam-wrapper').classList.add('hidden');
         } catch (error) { document.getElementById('loading-screen').innerHTML = `<h2>Error de red.</h2>`; }
     }
 
@@ -723,7 +761,7 @@
                 document.getElementById('blocked-msg').innerText = "Ya has completado este examen previamente.";
                 return;
             }
-        } catch(e) { return window.CustomDialog.alert("Error de validación."); }
+        } catch(e) { return window.CustomDialog.alert("Error al verificar identidad."); }
 
         sessionData.studentName = nameInput; sessionData.studentEmail = emailInput;
         sessionData.startTime = new Date().getTime();
@@ -735,11 +773,13 @@
             return { ...q, shuffledOpts: shuffleArray(optsWithRef) };
         });
         
-        hideAll(); document.getElementById('exam-wrapper').classList.remove('hidden');
+        hideAll(); 
+        document.getElementById('nav-actions').classList.add('hidden'); 
+        document.getElementById('exam-view').classList.remove('hidden');
+        document.getElementById('exam-wrapper').classList.remove('hidden');
         
         isExamActive = true; isBlocked = false; cheatCount = 0; isHandlingInfraction = false; isPermanentlyBlocked = false;
         
-        // Bloquear Botón Atrás
         history.pushState(null, null, location.href);
         window.onpopstate = function () { if (isExamActive || isPermanentlyBlocked) { history.go(1); } };
 
@@ -782,6 +822,7 @@
         }
         
         isExamActive = false; clearInterval(timerInterval);
+        document.getElementById('nav-actions').classList.remove('hidden'); 
         
         let payload = {
             examId: window.currentExamId,
@@ -802,7 +843,7 @@
         if(document.fullscreenElement) document.exitFullscreen();
     };
 
-    // --- SEGURIDAD ESTRICTA ---
+    // --- SEGURIDAD ---
     async function triggerSevereInfraction(reason) {
         if (!isExamActive || isBlocked || isHandlingInfraction) return;
         isHandlingInfraction = true; cheatCount = MAX_INFRACTIONS; 
@@ -811,11 +852,12 @@
         await cancelExamDb(reason);
     }
 
-    function checkInfraction() {
+    function checkInfraction(reason = "Exceso de pérdida de enfoque.") {
         if (!isExamActive || isBlocked || isHandlingInfraction) return;
         isHandlingInfraction = true; cheatCount++;
-        if (cheatCount >= MAX_INFRACTIONS) { cancelExamDb("Exceso de pérdida de enfoque."); } 
+        if (cheatCount >= MAX_INFRACTIONS) { cancelExamDb(reason); } 
         else { 
+            document.getElementById('warning-reason').innerText = "Se detectó pérdida de enfoque del examen.";
             document.getElementById('modal-count').innerText = cheatCount;
             document.getElementById('warning-modal').classList.remove('hidden');
         }
@@ -825,6 +867,7 @@
     async function cancelExamDb(logReason) {
         isBlocked = true; isPermanentlyBlocked = true; isExamActive = false; clearInterval(timerInterval);
         localStorage.setItem('estado_examen_bloqueado', 'true');
+        document.getElementById('nav-actions').classList.remove('hidden');
         
         if(!logReason.includes("captura") && !logReason.includes("copia")) {
             hideAll();
@@ -841,10 +884,12 @@
     }
 
     document.addEventListener("visibilitychange", () => { if(document.hidden) checkInfraction(); });
-    window.addEventListener("blur", checkInfraction);
+    // Se elimina document.addEventListener("fullscreenchange", ...)
+    
+    // Sólo el blur se mantiene como disuasivo básico
+    window.addEventListener("blur", () => { checkInfraction(); });
     window.closeModal = function() { document.getElementById('warning-modal').classList.add('hidden'); }
 
-    // Interceptar Teclas y Copiado
     document.addEventListener('keyup', (e) => {
         if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) { triggerSevereInfraction("Captura de pantalla de sistema detectada."); }
     });
