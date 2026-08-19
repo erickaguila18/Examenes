@@ -119,7 +119,7 @@
         .grid-layout { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
         
         @media (max-width: 600px) {
-            .navbar-brand .brand-title { display: none; } /* Oculta el texto en móviles si es muy largo */
+            .navbar-brand .brand-title { display: none; }
         }
 
         @media (max-width: 768px) {
@@ -159,7 +159,7 @@
                     const branding = JSON.parse(brandingStr);
                     if (branding.color) {
                         const darkColor = shadeColorInline(branding.color, -20);
-                        document.write('<style>:root { --primary: ' + branding.color + ' !important; --primary-dark: ' + darkColor + ' !important; }</style>');
+                        document.write('<style id="dynamic-branding">:root { --primary: ' + branding.color + ' !important; --primary-dark: ' + darkColor + ' !important; }</style>');
                     }
                 }
             } catch(e) {}
@@ -232,7 +232,7 @@
 
     <!-- SELECTOR DE ROL -->
     <div id="role-selector" class="card hidden" style="text-align: center;">
-        <h2 style="justify-content: center;"><i class="fi fi-ss-users"></i> Bienvenido a la Plataforma de evaluaciones</h2>
+        <h2 style="justify-content: center;"><i class="fi fi-ss-users"></i> Bienvenido a la Plataforma de Evaluaciones</h2>
         <p style="color: var(--text-secondary); margin-bottom: 30px;">Selecciona tu portal de acceso:</p>
         <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
             <button onclick="window.showStudentLogin()" style="width: 250px; padding: 20px;"><i class="fi fi-ss-graduation-cap"></i> Soy Alumno</button>
@@ -363,7 +363,7 @@
         <h2 id="grades-exam-title"><i class="fi fi-ss-stats"></i> Resultados</h2>
         
         <div id="share-container" style="background: #FAFAFA; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #E0E0E0;">
-            <p style="margin: 0 0 10px 0;"><strong><i class="fi fi-ss-link-alt"></i> Link para alumnos externos:</strong></p>
+            <p style="margin: 0 0 10px 0;"><strong><i class="fi fi-ss-link-alt"></i> Link para alumnos:</strong></p>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <a href="#" id="exam-share-link" onclick="window.handleInstructorLinkClick(event)" style="color: var(--primary); font-weight: bold; word-break: break-all;"></a>
                 <button onclick="window.copyExamLink()" class="btn-secondary btn-sm" style="width: auto;"><i class="fi fi-ss-copy"></i> Copiar</button>
@@ -411,7 +411,7 @@
                 <li><strong>Cualquier intento de copiar o capturar pantalla anulará el examen.</strong></li>
                 <li>Límite de 5 advertencias al perder enfoque.</li>
             </ul>
-            <button onclick="window.startExamProcess()" id="start-btn"><i class="fi fi-ss-play"></i> Comenzar Examen</button>
+            <button id="start-btn" onclick="window.startExamProcess()"><i class="fi fi-ss-play"></i> Comenzar Examen</button>
         </div>
 
         <div id="exam-wrapper" class="hidden">
@@ -442,7 +442,7 @@
 </div>
 
 <footer class="app-footer">
-    <p>Desarrollado por Enkodo by EAM - Release Candidate v1.0</p>
+    <p>Desarrollado por Enkodo by EAM - Release Candidate</p>
     <p class="quote">"If you want different results, do not do the same things." - Albert Einstein</p>
 </footer>
 
@@ -529,8 +529,8 @@
 
     function applyBrandingUI(data) {
         if(data.color) {
-            document.documentElement.style.setProperty('--primary', data.color);
-            document.documentElement.style.setProperty('--primary-dark', shadeColorInline(data.color, -20));
+            document.documentElement.style.setProperty('--primary', data.color, 'important');
+            document.documentElement.style.setProperty('--primary-dark', shadeColorInline(data.color, -20), 'important');
         }
         
         if(data.name && data.name.trim() !== "") {
@@ -555,8 +555,8 @@
     }
 
     function applyDefaultBranding() {
-        document.documentElement.style.setProperty('--primary', '#0288D1');
-        document.documentElement.style.setProperty('--primary-dark', '#005B9F');
+        document.documentElement.style.setProperty('--primary', '#0288D1', 'important');
+        document.documentElement.style.setProperty('--primary-dark', '#005B9F', 'important');
         document.getElementById('nav-brand-text').innerText = "Plataforma EEMS";
         document.getElementById('nav-brand-icon').classList.remove('hidden');
         document.getElementById('nav-brand-img').classList.add('hidden');
@@ -892,10 +892,17 @@
             if (logoFile) payload.logoUrl = await readFileAsDataURL(logoFile);
             if (avatarFile) payload.instructorAvatarUrl = await readFileAsDataURL(avatarFile);
 
+            // ACTUALIZACIÓN INMEDIATA UI (Optimista)
+            let currentBranding = JSON.parse(localStorage.getItem('eems_branding') || '{}');
+            let mergedBranding = { ...currentBranding, ...payload };
+            localStorage.setItem('eems_branding', JSON.stringify(mergedBranding));
+            applyBrandingUI(mergedBranding);
+
+            // GUARDADO EN FIREBASE
             await setDoc(doc(db, "settings", "branding_" + currentUser.uid), payload, { merge: true });
-            await loadBranding(currentUser.uid);
+            
             window.setLoading('btn-save-settings', false);
-            window.CustomDialog.alert("Configuración guardada correctamente.", "Éxito");
+            window.CustomDialog.alert("Configuración guardada y aplicada correctamente.", "Éxito");
         } catch(e) {
             window.setLoading('btn-save-settings', false);
             window.CustomDialog.alert("Hubo un error al procesar las imágenes o guardar. Verifica el tamaño de las imágenes.", "Error");
@@ -946,7 +953,6 @@
         reader.readAsText(file);
     });
 
-    // --- COPIAR Y MANEJAR LINK COMPARTIDO ---
     window.copyExamLink = () => {
         const link = document.getElementById('exam-share-link').href;
         navigator.clipboard.writeText(link).then(() => {
@@ -1150,6 +1156,7 @@
                 const std = JSON.parse(studentStr);
                 document.getElementById('manual-name').value = std.name;
                 document.getElementById('manual-email').value = std.email;
+                document.getElementById('manual-student-data').classList.add('hidden');
             } else {
                 document.getElementById('manual-student-data').classList.remove('hidden');
             }
@@ -1157,7 +1164,6 @@
             hideAll(); 
             document.getElementById('exam-view').classList.remove('hidden');
             document.getElementById('exam-intro').classList.remove('hidden');
-            document.getElementById('exam-wrapper').classList.add('hidden');
         } catch (error) { 
             document.getElementById('loading-screen').classList.remove('hidden');
             document.getElementById('loading-text').innerText = "Error de red."; 
@@ -1174,7 +1180,7 @@
         }
 
         document.getElementById('exam-intro').classList.add('hidden');
-        document.getElementById('manual-student-data').classList.add('hidden'); // Asegurar forzosamente que se oculta
+        document.getElementById('manual-student-data').classList.add('hidden');
         
         hideAll();
         document.getElementById('loading-screen').classList.remove('hidden');
@@ -1237,8 +1243,7 @@
         hideAll(); 
         document.getElementById('nav-actions').classList.add('hidden'); 
         document.getElementById('exam-view').classList.remove('hidden');
-        document.getElementById('exam-intro').classList.add('hidden'); // Ocultar explícitamente intro
-        document.getElementById('exam-wrapper').classList.remove('hidden'); // Mostrar preguntas
+        document.getElementById('exam-wrapper').classList.remove('hidden'); 
         
         isExamActive = true; isBlocked = false; cheatCount = 0; isHandlingInfraction = false; isPermanentlyBlocked = false;
         
