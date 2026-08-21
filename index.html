@@ -202,6 +202,24 @@
     </div>
 </div>
 
+<!-- MODAL DE BORRADO DE EXAMEN -->
+<div id="delete-modal" class="modal-overlay hidden">
+    <div class="modal-content danger-top">
+        <i class="fi fi-ss-trash modal-icon" style="color: var(--danger);"></i>
+        <h2 style="color: var(--danger); justify-content: center;">Eliminar Examen</h2>
+        <p>Estás a punto de eliminar el examen <strong id="delete-exam-name-text"></strong> y TODAS sus calificaciones. Esta acción no se puede deshacer.</p>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); background: #FAFAFA; padding: 10px; border-radius: 8px;">Se descargará un respaldo en CSV automáticamente.</p>
+        <div class="form-group" style="width: 100%; margin-top: 15px;">
+            <label style="justify-content: center;">Escribe "eliminar" para confirmar:</label>
+            <input type="text" id="delete-confirm-input" style="text-align: center;" autocomplete="off" placeholder="eliminar">
+        </div>
+        <div class="dialog-actions">
+            <button class="btn-secondary" onclick="window.closeDeleteModal()"><i class="fi fi-ss-cross"></i> Cancelar</button>
+            <button id="btn-confirm-delete" class="btn-danger" onclick="window.executeDeleteExam()"><i class="fi fi-ss-trash"></i> Borrar</button>
+        </div>
+    </div>
+</div>
+
 <div id="warning-modal" class="modal-overlay hidden">
     <div class="modal-content danger-top">
         <i class="fi fi-ss-triangle-warning modal-icon" style="color: var(--warning);"></i>
@@ -634,6 +652,7 @@
     
     window.gradesList = []; 
     let currentSort = { column: '', asc: true };
+    let examToDelete = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     window.currentExamId = urlParams.get('examId'); 
@@ -656,7 +675,7 @@
     function hideAll() {
         ['loading-screen', 'role-selector', 'login-view', 'student-login-view', 'student-portal', 
          'instructor-dashboard', 'instructor-upload', 'instructor-grades', 'exam-view', 
-         'blocked-view', 'success-view', 'severe-modal', 'admin-settings'].forEach(id => {
+         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal'].forEach(id => {
              const el = document.getElementById(id);
              if (el) el.classList.add('hidden');
          });
@@ -759,6 +778,7 @@
         document.getElementById('nav-ingresar').onclick = window.goHome;
     };
 
+    // --- INICIALIZADOR PRINCIPAL ---
     onAuthStateChanged(auth, async (user) => { 
         document.getElementById('main-navbar').classList.remove('hidden');
         
@@ -797,7 +817,6 @@
         }
         localStorage.setItem('tumb_student', JSON.stringify({email, gen, name}));
         
-        // Limpiar inputs
         document.getElementById('std-login-email').value = "";
         document.getElementById('std-login-gen').value = "";
         document.getElementById('std-login-name').value = "";
@@ -861,7 +880,6 @@
         const pwd = document.getElementById('login-pwd').value;
         try {
             await signInWithEmailAndPassword(auth, email, pwd);
-            // Limpiar inputs
             document.getElementById('login-email').value = "";
             document.getElementById('login-pwd').value = "";
         } catch(error) {
@@ -892,7 +910,10 @@
             }
             container.innerHTML += `<div class="exam-item">
                 <div><h3 style="margin:0;">${exam.config.name}</h3><p style="margin:5px 0 0 0; color:var(--text-secondary); font-size:0.9rem;">Clase: ${exam.config.gen} | ${expText}</p></div>
-                <button onclick="window.viewExamGrades('${d.id}', '${exam.config.name}')" style="width: auto;"><i class="fi fi-ss-stats"></i> Ver Calificaciones</button>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button onclick="window.viewExamGrades('${d.id}', '${exam.config.name}')" style="width: auto;"><i class="fi fi-ss-stats"></i> Ver Calificaciones</button>
+                    <button onclick="window.promptDeleteExam('${d.id}', '${exam.config.name}')" class="btn-danger" style="width: auto; padding: 14px;"><i class="fi fi-ss-trash"></i></button>
+                </div>
             </div>`;
         });
     };
@@ -948,6 +969,100 @@
         document.getElementById('instructor-upload').classList.remove('hidden'); 
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
+    };
+
+    // --- BORRADO SEGURO DE EXAMEN ---
+    window.promptDeleteExam = (examId, examName) => {
+        examToDelete = { id: examId, name: examName };
+        document.getElementById('delete-exam-name-text').innerText = examName;
+        document.getElementById('delete-confirm-input').value = "";
+        document.getElementById('delete-modal').classList.remove('hidden');
+    };
+
+    window.closeDeleteModal = () => {
+        examToDelete = null;
+        document.getElementById('delete-modal').classList.add('hidden');
+    };
+
+    window.executeDeleteExam = async () => {
+        const input = document.getElementById('delete-confirm-input').value.trim().toLowerCase();
+        if (input !== "eliminar") {
+            return window.CustomDialog.alert("Debes escribir la palabra 'eliminar' exactamente para continuar.");
+        }
+
+        window.setLoading('btn-confirm-delete', true);
+
+        try {
+            const examId = examToDelete.id;
+            const examName = examToDelete.name;
+            
+            const keySnap = await getDoc(doc(db, "exam_keys", examId));
+            let correctAnswers = [];
+            if (keySnap.exists()) correctAnswers = keySnap.data().answers;
+
+            const qSubs = query(collection(db, "submissions"), where("examId", "==", examId));
+            const subQuery = await getDocs(qSubs);
+            
+            let gradesForExport = [];
+            let submissionsToDelete = [];
+
+            subQuery.forEach((d) => {
+                submissionsToDelete.push(d.id);
+                const sub = d.data(); 
+                const evalTotal = sub.examInfo.questionsToShow || correctAnswers.length;
+                let score = 0; 
+                if (sub.answers) {
+                    sub.answers.forEach(a => { if(a.selectedOption === correctAnswers[a.questionIndex]) score++; });
+                }
+                
+                let percentage = (score / evalTotal) * 100;
+                let passed = percentage >= sub.examInfo.passingThreshold;
+                
+                gradesForExport.push({
+                    name: sub.student.name, email: sub.student.email,
+                    status: sub.status, infractions: sub.metrics?.infractions || 0,
+                    detail: sub.metrics?.detail || "",
+                    score: score, total: evalTotal, percentage: percentage, passed: passed,
+                    mins: Math.floor((sub.metrics?.timeUsedSeconds || 0) / 60)
+                });
+            });
+
+            if (gradesForExport.length > 0) {
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Alumno,Correo,Tiempo(m),Infracciones,Aciertos,Calificación,Estatus,Detalle\n";
+                gradesForExport.forEach(function(row) {
+                    let status = row.passed ? 'APROBADO' : 'REPROBADO';
+                    if(row.status === "BLOCKED") status = "ANULADO";
+                    if(row.status === "IN_PROGRESS") status = "EN CURSO/ABANDONADO";
+                    let csvRow = `"${row.name}","${row.email}",${row.mins},${row.infractions},"${row.score}/${row.total}",${row.percentage.toFixed(1)}%,${status},"${row.detail}"`;
+                    csvContent += csvRow + "\n";
+                });
+                var encodedUri = encodeURI(csvContent);
+                var link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `Respaldo_${examName.replace(/\s+/g, '_')}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            for (const subId of submissionsToDelete) {
+                await deleteDoc(doc(db, "submissions", subId));
+            }
+
+            await deleteDoc(doc(db, "exam_keys", examId));
+            await deleteDoc(doc(db, "exams", examId));
+
+            window.setLoading('btn-confirm-delete', false, '<i class="fi fi-ss-trash"></i> Borrar');
+            window.closeDeleteModal();
+            window.CustomDialog.alert("Examen eliminado y respaldo descargado.", "Éxito");
+            
+            window.backToDashboard();
+
+        } catch (error) {
+            window.setLoading('btn-confirm-delete', false, '<i class="fi fi-ss-trash"></i> Borrar');
+            window.CustomDialog.alert("Error al eliminar el examen.", "Error");
+        }
     };
 
     document.getElementById('upload-trigger').addEventListener('click', async (e) => {
@@ -1146,7 +1261,7 @@
                     status: sub.status, infractions: sub.metrics?.infractions || 0,
                     detail: sub.metrics?.detail || "",
                     score: score, total: evalTotal, percentage: percentage, passed: passed,
-                    mins: Math.floor(sub.metrics?.timeUsedSeconds / 60) || 0
+                    mins: Math.floor((sub.metrics?.timeUsedSeconds || 0) / 60)
                 });
             });
             renderGradesTable(window.gradesList);
@@ -1192,6 +1307,7 @@
             document.getElementById('exam-intro').classList.remove('hidden');
 
             const studentStr = localStorage.getItem('tumb_student');
+            const manualDataContainer = document.getElementById('manual-student-data');
             
             if (studentStr) {
                 const std = JSON.parse(studentStr);
@@ -1209,7 +1325,10 @@
                 document.getElementById('manual-email').value = std.email;
                 document.getElementById('manual-gen').value = std.gen;
                 
-                document.getElementById('manual-student-data').classList.add('hidden');
+                if(manualDataContainer) {
+                    manualDataContainer.classList.add('hidden');
+                    manualDataContainer.style.display = 'none';
+                }
                 
                 let badge = document.getElementById('logged-in-badge');
                 if(!badge) {
@@ -1225,7 +1344,11 @@
                 document.getElementById('manual-email').value = '';
                 document.getElementById('manual-gen').value = '';
                 
-                document.getElementById('manual-student-data').classList.remove('hidden');
+                if(manualDataContainer) {
+                    manualDataContainer.classList.remove('hidden');
+                    manualDataContainer.style.display = '';
+                }
+                
                 let badge = document.getElementById('logged-in-badge');
                 if(badge) badge.classList.add('hidden');
             }
@@ -1313,7 +1436,6 @@
         hideAll(); 
         document.getElementById('nav-actions').classList.add('hidden'); 
         document.getElementById('exam-view').classList.remove('hidden');
-        document.getElementById('exam-intro').classList.add('hidden'); 
         document.getElementById('exam-wrapper').classList.remove('hidden'); 
         
         isExamActive = true; isBlocked = false; cheatCount = 0; isHandlingInfraction = false; isPermanentlyBlocked = false;
