@@ -632,6 +632,7 @@
     let cheatCount = 0; const MAX_INFRACTIONS = 5;
     let timerInterval, timeRemainingSeconds = 0;
     
+    // Variables Tabla Inteligente
     window.gradesList = []; 
     let currentSort = { column: '', asc: true };
 
@@ -747,6 +748,7 @@
         document.getElementById('nav-ingresar').onclick = window.goHome;
     };
 
+    // --- INICIALIZADOR PRINCIPAL ---
     onAuthStateChanged(auth, async (user) => { 
         document.getElementById('main-navbar').classList.remove('hidden');
         
@@ -773,7 +775,19 @@
         document.getElementById('full-screen-loader').classList.add('hidden');
     });
 
-    // --- FLUJO ALUMNO ---
+    // --- EVENTOS ENTER ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const loginPwd = document.getElementById('login-pwd');
+        if (loginPwd) { loginPwd.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.loginInstructor(); }); }
+        
+        const loginEmail = document.getElementById('login-email');
+        if (loginEmail) { loginEmail.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.loginInstructor(); }); }
+        
+        const stdGen = document.getElementById('std-login-gen');
+        if (stdGen) { stdGen.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.loginStudent(); }); }
+    });
+
+    // --- FLUJO ALUMNO (DASHBOARD) ---
     window.loginStudent = async () => {
         window.setLoading('std-login-btn', true);
         const email = document.getElementById('std-login-email').value.trim().toLowerCase();
@@ -784,6 +798,12 @@
             return window.CustomDialog.alert("Llena todos los campos."); 
         }
         localStorage.setItem('tumb_student', JSON.stringify({email, gen, name}));
+        
+        // Limpiar inputs
+        document.getElementById('std-login-email').value = "";
+        document.getElementById('std-login-gen').value = "";
+        document.getElementById('std-login-name').value = "";
+        
         window.location.replace(window.location.pathname); 
     };
 
@@ -843,6 +863,9 @@
         const pwd = document.getElementById('login-pwd').value;
         try {
             await signInWithEmailAndPassword(auth, email, pwd);
+            // Limpiar inputs
+            document.getElementById('login-email').value = "";
+            document.getElementById('login-pwd').value = "";
         } catch(error) {
             window.setLoading('login-btn', false);
             window.CustomDialog.alert("Credenciales incorrectas.");
@@ -1165,8 +1188,14 @@
             document.getElementById('display-exam-name').innerHTML = `<i class="fi fi-ss-file-signature"></i> ` + examConfig.name;
             document.getElementById('display-exam-gen').innerText = "Clase: " + examConfig.gen;
             document.getElementById('display-duration').innerText = examConfig.duration || 60;
-            
+
+            hideAll(); 
+            document.getElementById('exam-view').classList.remove('hidden');
+            document.getElementById('exam-intro').classList.remove('hidden');
+
             const studentStr = localStorage.getItem('tumb_student');
+            const manualDataContainer = document.getElementById('manual-student-data');
+            
             if (studentStr) {
                 const std = JSON.parse(studentStr);
                 
@@ -1183,10 +1212,11 @@
                 document.getElementById('manual-email').value = std.email;
                 document.getElementById('manual-gen').value = std.gen;
                 
-                // Ocultar inputs si está logueado
-                document.getElementById('manual-student-data').classList.add('hidden');
+                if(manualDataContainer) {
+                    manualDataContainer.classList.add('hidden');
+                    manualDataContainer.style.display = 'none';
+                }
                 
-                // Mostrar confirmación visual de acceso
                 let badge = document.getElementById('logged-in-badge');
                 if(!badge) {
                     badge = document.createElement('div');
@@ -1197,16 +1227,19 @@
                 badge.innerHTML = `<i class="fi fi-ss-user-check"></i> Accediendo como: ${std.name}`;
                 badge.classList.remove('hidden');
             } else {
-                // Volver a mostrar los campos si entra desde link y NO está logueado
-                document.getElementById('manual-student-data').classList.remove('hidden');
-                if(document.getElementById('logged-in-badge')) {
-                    document.getElementById('logged-in-badge').classList.add('hidden');
+                document.getElementById('manual-name').value = '';
+                document.getElementById('manual-email').value = '';
+                document.getElementById('manual-gen').value = '';
+                
+                if(manualDataContainer) {
+                    manualDataContainer.classList.remove('hidden');
+                    manualDataContainer.style.display = '';
                 }
+                
+                let badge = document.getElementById('logged-in-badge');
+                if(badge) badge.classList.add('hidden');
             }
 
-            hideAll(); 
-            document.getElementById('exam-view').classList.remove('hidden');
-            document.getElementById('exam-intro').classList.remove('hidden');
         } catch (error) { 
             document.getElementById('loading-screen').classList.remove('hidden');
             document.getElementById('loading-text').innerText = "Error de red."; 
@@ -1228,7 +1261,7 @@
             window.setLoading('start-btn', false);
             return window.CustomDialog.alert("El Código de Clase es incorrecto. No tienes autorización para este examen."); 
         }
-
+        
         hideAll();
         document.getElementById('loading-screen').classList.remove('hidden');
         document.getElementById('loading-text').innerText = "Validando acceso...";
