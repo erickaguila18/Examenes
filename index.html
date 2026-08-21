@@ -88,8 +88,8 @@
         .badge { padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
         .badge-pass { background-color: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; } 
         .badge-fail { background-color: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; } 
-        .badge-blocked { background-color: #F5F5F5; color: #424242; border: 1px solid #E0E0E0; }
-        .badge-progress { background-color: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; }
+        .badge-blocked { background-color: #F5F5F5; color: #424242; border: 1px solid #E0E0E0; cursor: help; }
+        .badge-progress { background-color: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; cursor: help; }
         
         .exam-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #E0E0E0; border-radius: 8px; margin-bottom: 10px; background: #FAFAFA; flex-wrap: wrap; gap: 10px;}
         .exam-item.pending { border-left: 4px solid var(--warning); }
@@ -215,7 +215,7 @@
 <div id="severe-modal" class="modal-overlay hidden">
     <div class="modal-content danger-top" style="background-color: #FFEBEE; border: 4px solid var(--danger);">
         <i class="fi fi-ss-shield-exclamation modal-icon" style="color: var(--danger);"></i>
-        <h2 style="color: var(--danger); font-size: 1.8rem; font-weight: 900; justify-content: center;">¡INFRACCIÓN GRAVE!</h2>
+        <h2 style="color: var(--danger); font-size: 1.8rem; font-weight: 900; justify-content: center; text-align:center;">¡INFRACCIÓN GRAVE!</h2>
         <p id="severe-reason" style="font-size: 1.2rem; font-weight: bold; color: var(--danger); text-align: center; margin: 15px 0;"></p>
         <p style="color: var(--text-main); text-align: center;">El examen ha sido cancelado automáticamente y reportado al sistema.</p>
         <button onclick="window.closeAndGoHome()" style="background-color: var(--danger); width: 100%; margin-top: 20px;"><i class="fi fi-ss-sign-out-alt"></i> Salir de la Evaluación</button>
@@ -511,7 +511,7 @@
         });
     };
 
-    // CARGA DE BRANDING DINÁMICO (MULTI-TENANT)
+    // CARGA DE BRANDING DINÁMICO
     async function loadBranding(instructorUid = null) {
         try {
             let docRef = doc(db, "settings", "branding");
@@ -552,7 +552,6 @@
             document.getElementById('nav-brand-img').classList.remove('hidden');
         }
 
-        // Inyectar perfil en el Dashboard del Instructor
         if(data.instructorName && data.instructorName.trim() !== "") {
             document.getElementById('dashboard-inst-name').innerText = data.instructorName;
         }
@@ -575,7 +574,7 @@
         document.getElementById('dashboard-inst-avatar').classList.add('hidden');
     }
 
-    // SINCRONIZADOR DE COLOR HEXADECIMAL
+    // SINCRONIZADOR DE COLOR
     const colorPicker = document.getElementById('config-brand-color');
     const hexInput = document.getElementById('config-brand-hex');
     colorPicker.addEventListener('input', (e) => hexInput.value = e.target.value.toUpperCase());
@@ -621,7 +620,6 @@
     let cheatCount = 0; const MAX_INFRACTIONS = 5;
     let timerInterval, timeRemainingSeconds = 0;
     
-    // Variables Tabla Inteligente
     window.gradesList = []; 
     let currentSort = { column: '', asc: true };
 
@@ -654,7 +652,6 @@
         if (container) container.classList.remove('expanded');
     }
 
-    // Función definitiva para limpiar sesión y volver al inicio
     window.closeAndGoHome = () => {
         const branding = localStorage.getItem('eems_branding');
         localStorage.clear(); 
@@ -706,7 +703,6 @@
         }
     };
 
-    // Funciones de Logout
     window.logoutStudent = () => { 
         const branding = localStorage.getItem('eems_branding');
         localStorage.clear(); 
@@ -739,12 +735,10 @@
         document.getElementById('nav-ingresar').onclick = window.goHome;
     };
 
-    // --- INICIALIZADOR PRINCIPAL ---
     onAuthStateChanged(auth, async (user) => { 
         document.getElementById('main-navbar').classList.remove('hidden');
         
         if (window.currentExamId) {
-            // El loadExamView internamente carga el branding del instructor de ese examen
             await loadExamView();
         } else if (user) {
             currentUser = user;
@@ -767,7 +761,7 @@
         document.getElementById('full-screen-loader').classList.add('hidden');
     });
 
-    // --- FLUJO ALUMNO (DASHBOARD) ---
+    // --- FLUJO ALUMNO ---
     window.loginStudent = async () => {
         window.setLoading('std-login-btn', true);
         const email = document.getElementById('std-login-email').value.trim().toLowerCase();
@@ -803,9 +797,9 @@
                 completedExams[sub.examId] = sub;
                 
                 if (sub.status === "BLOCKED") {
-                    historyHTML += `<tr><td>${sub.examInfo.name}</td><td>--</td><td>--</td><td><span class="badge badge-blocked"><i class="fi fi-ss-ban"></i> ANULADO</span></td></tr>`;
+                    historyHTML += `<tr><td>${sub.examInfo.name}</td><td>--</td><td>--</td><td><span class="badge badge-blocked" title="${sub.metrics?.detail || 'Infracción'}"><i class="fi fi-ss-ban"></i> ANULADO</span></td></tr>`;
                 } else if (sub.status === "IN_PROGRESS") {
-                    historyHTML += `<tr><td>${sub.examInfo.name}</td><td>--</td><td>--</td><td><span class="badge badge-progress"><i class="fi fi-ss-spinner"></i> EN CURSO (ABANDONADO)</span></td></tr>`;
+                    historyHTML += `<tr><td>${sub.examInfo.name}</td><td>--</td><td>--</td><td><span class="badge badge-progress" title="Abandono"><i class="fi fi-ss-spinner"></i> EN CURSO (ABANDONADO)</span></td></tr>`;
                 } else {
                     historyHTML += `<tr><td>${sub.examInfo.name}</td><td>Entregado</td><td>Sujeto a Revisión</td><td><span class="badge badge-pass"><i class="fi fi-ss-check"></i> FINALIZADO</span></td></tr>`;
                 }
@@ -901,20 +895,18 @@
             if (logoFile) payload.logoUrl = await readFileAsDataURL(logoFile);
             if (avatarFile) payload.instructorAvatarUrl = await readFileAsDataURL(avatarFile);
 
-            // ACTUALIZACIÓN INMEDIATA UI (Optimista)
             let currentBranding = JSON.parse(localStorage.getItem('eems_branding') || '{}');
             let mergedBranding = { ...currentBranding, ...payload };
             localStorage.setItem('eems_branding', JSON.stringify(mergedBranding));
             applyBrandingUI(mergedBranding);
 
-            // GUARDADO EN FIREBASE
             await setDoc(doc(db, "settings", "branding_" + currentUser.uid), payload, { merge: true });
             
             window.setLoading('btn-save-settings', false);
             window.CustomDialog.alert("Configuración guardada y aplicada correctamente.", "Éxito");
         } catch(e) {
             window.setLoading('btn-save-settings', false);
-            window.CustomDialog.alert("Hubo un error al procesar las imágenes o guardar. Verifica el tamaño de las imágenes.", "Error");
+            window.CustomDialog.alert("Hubo un error al procesar las imágenes.", "Error");
         }
     };
 
@@ -1005,12 +997,12 @@
     window.exportToCSV = function() {
         if(!window.gradesList || window.gradesList.length === 0) return window.CustomDialog.alert("No hay datos para exportar.");
         let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Alumno,Correo,Tiempo(m),Infracciones,Aciertos,Calificación,Estatus\n";
+        csvContent += "Alumno,Correo,Tiempo(m),Infracciones,Aciertos,Calificación,Estatus,Detalle\n";
         window.gradesList.forEach(function(row) {
             let status = row.passed ? 'APROBADO' : 'REPROBADO';
             if(row.status === "BLOCKED") status = "ANULADO";
             if(row.status === "IN_PROGRESS") status = "EN CURSO/ABANDONADO";
-            let csvRow = `"${row.name}","${row.email}",${row.mins},${row.infractions},"${row.score}/${row.total}",${row.percentage.toFixed(1)}%,${status}`;
+            let csvRow = `"${row.name}","${row.email}",${row.mins},${row.infractions},"${row.score}/${row.total}",${row.percentage.toFixed(1)}%,${status},"${row.detail}"`;
             csvContent += csvRow + "\n";
         });
         var encodedUri = encodeURI(csvContent);
@@ -1040,19 +1032,20 @@
                     <td>${sub.name}<br><small>${sub.email}</small></td>
                     <td style="color:var(--warning); font-weight:bold;"><i class="fi fi-ss-time-quarter-to"></i> EN CURSO</td>
                     <td>--</td><td>--</td>
-                    <td><span class="badge badge-progress"><i class="fi fi-ss-spinner"></i> EN CURSO</span></td>
+                    <td title="Motivo: Posible abandono o cierre de ventana"><span class="badge badge-progress"><i class="fi fi-ss-spinner"></i> EN CURSO</span></td>
                     <td><div class="table-actions"><button class="btn-warning btn-sm" title="Reiniciar" onclick="window.resetAttempt('${sub.docId}')"><i class="fi fi-ss-refresh"></i></button></div></td>
                 </tr>`;
                 return;
             }
 
             if (sub.status === "BLOCKED") {
+                let motivo = sub.detail || 'Múltiples Infracciones';
                 tbody.innerHTML += `<tr>
                     <td style="text-align: center;"><b>${rowNumber}</b></td>
                     <td>${sub.name}<br><small>${sub.email}</small></td>
                     <td style="color:red; font-weight:bold;"><i class="fi fi-ss-triangle-warning"></i> Inf: ${sub.infractions}</td>
                     <td>--</td><td>--</td>
-                    <td><span class="badge badge-blocked"><i class="fi fi-ss-ban"></i> ANULADO</span></td>
+                    <td title="Motivo: ${motivo}"><span class="badge badge-blocked"><i class="fi fi-ss-ban"></i> ANULADO</span></td>
                     <td><div class="table-actions"><button class="btn-warning btn-sm" title="Reiniciar" onclick="window.resetAttempt('${sub.docId}')"><i class="fi fi-ss-refresh"></i></button></div></td>
                 </tr>`;
                 return;
@@ -1118,6 +1111,7 @@
                 window.gradesList.push({
                     docId: d.id, name: sub.student.name, email: sub.student.email,
                     status: sub.status, infractions: sub.metrics?.infractions || 0,
+                    detail: sub.metrics?.detail || "",
                     score: score, total: evalTotal, percentage: percentage, passed: passed,
                     mins: Math.floor(sub.metrics?.timeUsedSeconds / 60) || 0
                 });
@@ -1164,7 +1158,6 @@
             if (studentStr) {
                 const std = JSON.parse(studentStr);
                 
-                // SEGURIDAD: VERIFICAR CÓDIGO DE CLASE AL ENTRAR POR LINK DIRECTO
                 if (std.gen !== examConfig.gen.toUpperCase()) {
                     document.getElementById('full-screen-loader').classList.add('hidden');
                     hideAll(); 
@@ -1177,9 +1170,6 @@
                 document.getElementById('manual-name').value = std.name;
                 document.getElementById('manual-email').value = std.email;
                 document.getElementById('manual-gen').value = std.gen;
-                document.getElementById('manual-student-data').classList.add('hidden');
-            } else {
-                document.getElementById('manual-student-data').classList.remove('hidden');
             }
 
             hideAll(); 
@@ -1202,15 +1192,11 @@
             return window.CustomDialog.alert("Por favor, llena todos los campos correctamente."); 
         }
 
-        // SEGURIDAD: VERIFICACIÓN DEL CÓDIGO DE CLASE
         if(genInput !== examConfig.gen.toUpperCase()) {
             window.setLoading('start-btn', false);
             return window.CustomDialog.alert("El Código de Clase es incorrecto. No tienes autorización para este examen."); 
         }
 
-        document.getElementById('exam-intro').classList.add('hidden');
-        document.getElementById('manual-student-data').classList.add('hidden');
-        
         hideAll();
         document.getElementById('loading-screen').classList.remove('hidden');
         document.getElementById('loading-text').innerText = "Validando acceso...";
