@@ -1280,7 +1280,7 @@
 
     // --- FLUJO ALUMNO (TOMA DE EXAMEN) ---
     async function loadExamView() {
-        if (isExamActive) return; // BLOQUEO: Previene que Firebase Auth recargue esta vista si el examen ya comenzó
+        if (isExamActive) return; 
         
         try {
             const docSnap = await getDoc(doc(db, "exams", window.currentExamId));
@@ -1310,7 +1310,6 @@
             hideAll(); 
             document.getElementById('exam-view').classList.remove('hidden');
             
-            // Asegurar que el intro sea visible y no contenga "display:none" residual
             const intro = document.getElementById('exam-intro');
             if(intro) {
                 intro.classList.remove('hidden');
@@ -1375,6 +1374,8 @@
     }
 
     window.startExamProcess = async function() {
+        if (isExamActive) return; 
+
         window.setLoading('start-btn', true);
         const nameInput = document.getElementById('manual-name').value.trim();
         const emailInput = document.getElementById('manual-email').value.trim().toLowerCase();
@@ -1390,7 +1391,8 @@
             return window.CustomDialog.alert("El Código de Clase es incorrecto. No tienes autorización para este examen."); 
         }
         
-        // FORZAR EL OCULTAMIENTO DEL INTRO
+        isExamActive = true; 
+        
         const intro = document.getElementById('exam-intro');
         if(intro) {
             intro.classList.add('hidden');
@@ -1421,25 +1423,30 @@
                 let existingStatus = null;
                 snapshot.forEach(d => { existingStatus = d.data().status; });
                 
-                hideAll(); document.getElementById('blocked-view').classList.remove('hidden');
-                document.getElementById('nav-actions').classList.remove('hidden');
-                
-                if (existingStatus === "COMPLETED") {
-                    document.getElementById('blocked-title').innerText = "INTENTO AGOTADO";
-                    document.getElementById('blocked-msg').innerText = "Ya has completado este examen previamente.";
-                } else if (existingStatus === "BLOCKED") {
-                    document.getElementById('blocked-title').innerText = "EXAMEN ANULADO";
-                    document.getElementById('blocked-msg').innerText = "Tu examen fue anulado previamente por infracciones de seguridad.";
-                } else if (existingStatus === "IN_PROGRESS") {
-                    document.getElementById('blocked-title').innerText = "INTENTO ANULADO";
-                    document.getElementById('blocked-msg').innerText = "Se detectó que el examen fue cerrado o recargado sin finalizar. Contacta a tu instructor para solicitar un reinicio.";
-                    snapshot.forEach(async (d) => {
-                        await setDoc(doc(db, "submissions", d.id), { status: "BLOCKED", metrics: { detail: "Abandono de examen (Cierre de ventana)." } }, { merge: true });
-                    });
+                if (existingStatus === "COMPLETED" || existingStatus === "BLOCKED" || existingStatus === "IN_PROGRESS") {
+                    isExamActive = false; 
+                    hideAll(); 
+                    document.getElementById('blocked-view').classList.remove('hidden');
+                    document.getElementById('nav-actions').classList.remove('hidden');
+                    
+                    if (existingStatus === "COMPLETED") {
+                        document.getElementById('blocked-title').innerText = "INTENTO AGOTADO";
+                        document.getElementById('blocked-msg').innerText = "Ya has completado este examen previamente.";
+                    } else if (existingStatus === "BLOCKED") {
+                        document.getElementById('blocked-title').innerText = "EXAMEN ANULADO";
+                        document.getElementById('blocked-msg').innerText = "Tu examen fue anulado previamente por infracciones de seguridad.";
+                    } else if (existingStatus === "IN_PROGRESS") {
+                        document.getElementById('blocked-title').innerText = "INTENTO ANULADO";
+                        document.getElementById('blocked-msg').innerText = "Se detectó que el examen fue cerrado o recargado sin finalizar. Contacta a tu instructor para solicitar un reinicio.";
+                        snapshot.forEach(async (d) => {
+                            await setDoc(doc(db, "submissions", d.id), { status: "BLOCKED", metrics: { detail: "Abandono de examen (Cierre de ventana)." } }, { merge: true });
+                        });
+                    }
+                    return;
                 }
-                return;
             }
         } catch(e) { 
+            isExamActive = false;
             window.setLoading('start-btn', false);
             hideAll();
             document.getElementById('exam-view').classList.remove('hidden');
@@ -1473,9 +1480,13 @@
         hideAll(); 
         document.getElementById('nav-actions').classList.add('hidden'); 
         document.getElementById('exam-view').classList.remove('hidden');
+        
+        const introEl = document.getElementById('exam-intro');
+        if(introEl) { introEl.classList.add('hidden'); introEl.style.display = 'none'; }
+        
         document.getElementById('exam-wrapper').classList.remove('hidden'); 
         
-        isExamActive = true; isBlocked = false; cheatCount = 0; isHandlingInfraction = false; isPermanentlyBlocked = false;
+        isBlocked = false; cheatCount = 0; isHandlingInfraction = false; isPermanentlyBlocked = false;
         
         history.pushState(null, null, location.href);
         window.onpopstate = function () { if (isExamActive || isPermanentlyBlocked) { history.go(1); } };
