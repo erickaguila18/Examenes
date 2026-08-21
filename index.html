@@ -780,6 +780,9 @@
 
     // --- INICIALIZADOR PRINCIPAL ---
     onAuthStateChanged(auth, async (user) => { 
+        // EVITAR QUE FIREBASE ACTUALICE LA UI SI ESTAMOS EN MEDIO DE UN EXAMEN
+        if (isExamActive) return; 
+
         document.getElementById('main-navbar').classList.remove('hidden');
         
         if (window.currentExamId) {
@@ -1277,6 +1280,8 @@
 
     // --- FLUJO ALUMNO (TOMA DE EXAMEN) ---
     async function loadExamView() {
+        if (isExamActive) return; // BLOQUEO: Previene que Firebase Auth recargue esta vista si el examen ya comenzó
+        
         try {
             const docSnap = await getDoc(doc(db, "exams", window.currentExamId));
             if (!docSnap.exists()) {
@@ -1304,7 +1309,13 @@
 
             hideAll(); 
             document.getElementById('exam-view').classList.remove('hidden');
-            document.getElementById('exam-intro').classList.remove('hidden');
+            
+            // Asegurar que el intro sea visible y no contenga "display:none" residual
+            const intro = document.getElementById('exam-intro');
+            if(intro) {
+                intro.classList.remove('hidden');
+                intro.style.display = '';
+            }
 
             const studentStr = localStorage.getItem('tumb_student');
             const manualDataContainer = document.getElementById('manual-student-data');
@@ -1339,6 +1350,7 @@
                 }
                 badge.innerHTML = `<i class="fi fi-ss-user-check"></i> Accediendo como: ${std.name}`;
                 badge.classList.remove('hidden');
+                badge.style.display = '';
             } else {
                 document.getElementById('manual-name').value = '';
                 document.getElementById('manual-email').value = '';
@@ -1350,7 +1362,10 @@
                 }
                 
                 let badge = document.getElementById('logged-in-badge');
-                if(badge) badge.classList.add('hidden');
+                if(badge) {
+                    badge.classList.add('hidden');
+                    badge.style.display = 'none';
+                }
             }
 
         } catch (error) { 
@@ -1375,6 +1390,25 @@
             return window.CustomDialog.alert("El Código de Clase es incorrecto. No tienes autorización para este examen."); 
         }
         
+        // FORZAR EL OCULTAMIENTO DEL INTRO
+        const intro = document.getElementById('exam-intro');
+        if(intro) {
+            intro.classList.add('hidden');
+            intro.style.display = 'none';
+        }
+
+        const manualData = document.getElementById('manual-student-data');
+        if(manualData) {
+            manualData.classList.add('hidden');
+            manualData.style.display = 'none';
+        }
+
+        const badge = document.getElementById('logged-in-badge');
+        if(badge) {
+            badge.classList.add('hidden');
+            badge.style.display = 'none';
+        }
+
         hideAll();
         document.getElementById('loading-screen').classList.remove('hidden');
         document.getElementById('loading-text').innerText = "Validando acceso...";
@@ -1409,7 +1443,10 @@
             window.setLoading('start-btn', false);
             hideAll();
             document.getElementById('exam-view').classList.remove('hidden');
-            document.getElementById('exam-intro').classList.remove('hidden');
+            if(intro) {
+                intro.classList.remove('hidden');
+                intro.style.display = '';
+            }
             return window.CustomDialog.alert("Error de conexión al verificar identidad."); 
         }
 
