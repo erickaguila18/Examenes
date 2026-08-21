@@ -410,7 +410,7 @@
         
         <div id="exam-intro">
             <!-- CAJA DE REGISTRO MANUAL DEL ALUMNO -->
-            <div class="form-group hidden" id="manual-student-data" style="background: #FAFAFA; padding: 20px; border-radius: 8px; border: 1px solid #E0E0E0;">
+            <div class="form-group" id="manual-student-data" style="background: #FAFAFA; padding: 20px; border-radius: 8px; border: 1px solid #E0E0E0;">
                 <label><i class="fi fi-ss-user"></i> Nombre Completo</label><input type="text" id="manual-name">
                 <br><label><i class="fi fi-ss-envelope"></i> Correo Electrónico</label><input type="email" id="manual-email">
                 <br><label><i class="fi fi-ss-key"></i> Código de Clase</label><input type="text" id="manual-gen" placeholder="Ingresa el código proporcionado">
@@ -632,7 +632,6 @@
     let cheatCount = 0; const MAX_INFRACTIONS = 5;
     let timerInterval, timeRemainingSeconds = 0;
     
-    // Variables Tabla Inteligente
     window.gradesList = []; 
     let currentSort = { column: '', asc: true };
 
@@ -716,6 +715,18 @@
         }
     };
 
+    // --- EVENTOS ENTER PARA INICIO DE SESIÓN ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const loginPwd = document.getElementById('login-pwd');
+        if (loginPwd) { loginPwd.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.loginInstructor(); }); }
+        
+        const loginEmail = document.getElementById('login-email');
+        if (loginEmail) { loginEmail.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.loginInstructor(); }); }
+        
+        const stdGen = document.getElementById('std-login-gen');
+        if (stdGen) { stdGen.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.loginStudent(); }); }
+    });
+
     window.logoutStudent = () => { 
         const branding = localStorage.getItem('eems_branding');
         localStorage.clear(); 
@@ -748,7 +759,6 @@
         document.getElementById('nav-ingresar').onclick = window.goHome;
     };
 
-    // --- INICIALIZADOR PRINCIPAL ---
     onAuthStateChanged(auth, async (user) => { 
         document.getElementById('main-navbar').classList.remove('hidden');
         
@@ -775,19 +785,7 @@
         document.getElementById('full-screen-loader').classList.add('hidden');
     });
 
-    // --- EVENTOS ENTER ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const loginPwd = document.getElementById('login-pwd');
-        if (loginPwd) { loginPwd.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.loginInstructor(); }); }
-        
-        const loginEmail = document.getElementById('login-email');
-        if (loginEmail) { loginEmail.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.loginInstructor(); }); }
-        
-        const stdGen = document.getElementById('std-login-gen');
-        if (stdGen) { stdGen.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.loginStudent(); }); }
-    });
-
-    // --- FLUJO ALUMNO (DASHBOARD) ---
+    // --- FLUJO ALUMNO ---
     window.loginStudent = async () => {
         window.setLoading('std-login-btn', true);
         const email = document.getElementById('std-login-email').value.trim().toLowerCase();
@@ -803,7 +801,7 @@
         document.getElementById('std-login-email').value = "";
         document.getElementById('std-login-gen').value = "";
         document.getElementById('std-login-name').value = "";
-        
+
         window.location.replace(window.location.pathname); 
     };
 
@@ -1194,7 +1192,6 @@
             document.getElementById('exam-intro').classList.remove('hidden');
 
             const studentStr = localStorage.getItem('tumb_student');
-            const manualDataContainer = document.getElementById('manual-student-data');
             
             if (studentStr) {
                 const std = JSON.parse(studentStr);
@@ -1212,10 +1209,7 @@
                 document.getElementById('manual-email').value = std.email;
                 document.getElementById('manual-gen').value = std.gen;
                 
-                if(manualDataContainer) {
-                    manualDataContainer.classList.add('hidden');
-                    manualDataContainer.style.display = 'none';
-                }
+                document.getElementById('manual-student-data').classList.add('hidden');
                 
                 let badge = document.getElementById('logged-in-badge');
                 if(!badge) {
@@ -1231,11 +1225,7 @@
                 document.getElementById('manual-email').value = '';
                 document.getElementById('manual-gen').value = '';
                 
-                if(manualDataContainer) {
-                    manualDataContainer.classList.remove('hidden');
-                    manualDataContainer.style.display = '';
-                }
-                
+                document.getElementById('manual-student-data').classList.remove('hidden');
                 let badge = document.getElementById('logged-in-badge');
                 if(badge) badge.classList.add('hidden');
             }
@@ -1323,6 +1313,7 @@
         hideAll(); 
         document.getElementById('nav-actions').classList.add('hidden'); 
         document.getElementById('exam-view').classList.remove('hidden');
+        document.getElementById('exam-intro').classList.add('hidden'); 
         document.getElementById('exam-wrapper').classList.remove('hidden'); 
         
         isExamActive = true; isBlocked = false; cheatCount = 0; isHandlingInfraction = false; isPermanentlyBlocked = false;
